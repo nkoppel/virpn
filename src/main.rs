@@ -6,7 +6,9 @@ use crate::io::*;
 mod stack;
 mod op_helpers;
 mod op;
-// mod modes;
+mod modes;
+
+use modes::manager::Manager_mode;
 
 fn keys_of_str(s: &str) -> Vec<Key> {
     let mut out = Vec::new();
