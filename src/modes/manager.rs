@@ -1,13 +1,48 @@
 use crate::modes::*;
+use crate::modes::nil::Nil_mode;
 
 pub struct Manager_mode {
+    operator_regexes: Vec<(Regex, String)>,
     bindings: HashMap<Vec<Key>, String>,
-    operator_regexes: HashMap<String, Regex>,
     maxlen: usize,
     buffer: Vec<Key>,
     submode: Box<dyn Mode>,
     submode_owns: bool,
     prev_output: String
+}
+
+impl Manager_mode {
+    pub fn new() -> Manager_mode {
+        Manager_mode {
+            operator_regexes: Vec::new(),
+            bindings: HashMap::new(),
+            maxlen: 0,
+            buffer: Vec::new(),
+            submode: Box::new(Nil_mode::new()),
+            submode_owns: false,
+            prev_output: String::new()
+        }
+    }
+
+    pub fn build(modes: &Vec<Box<dyn Mode>>) -> Manager_mode {
+        let mut out = Manager_mode::new();
+
+        for mode in modes {
+            let name = mode.get_name();
+            let regex = mode.get_operator_regex();
+            out.operator_regexes.push((regex, name.clone()));
+
+            for b in mode.get_bindings() {
+                if b.len() > out.maxlen {
+                    out.maxlen = b.len();
+                }
+
+                out.bindings.insert(b, name.clone());
+            }
+        }
+
+        out
+    }
 }
 
 impl Mode for Manager_mode {
@@ -25,8 +60,8 @@ impl Mode for Manager_mode {
 
     fn copy(&self) -> Box<dyn Mode> {
         Box::new(Manager_mode{
-            bindings: self.bindings.clone(),
             operator_regexes: self.operator_regexes.clone(),
+            bindings: self.bindings.clone(),
             maxlen: self.maxlen,
             buffer: self.buffer.clone(),
             submode: self.submode.copy(),

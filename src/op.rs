@@ -2,7 +2,7 @@ use crate::stack::Stack;
 use crate::op_helpers::*;
 use std::collections::HashMap;
 
-pub fn gen_ops() -> HashMap<String, Box<Fn(&mut Stack) -> Res<()>>> {
+pub fn gen_ops() -> HashMap<String, Op> {
     vec![
         ("+".to_string(), op_2(&|x, y| x + y)),
         ("-".to_string(), op_2(&|x, y| x - y)),

@@ -6,6 +6,7 @@ pub use regex::Regex;
 
 pub mod manager;
 pub mod number;
+pub mod nil;
 
 enum Action {
     IntoMode(String, Key),

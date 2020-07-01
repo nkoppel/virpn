@@ -37,7 +37,7 @@ impl Mode for Number_mode {
 
     fn run(&mut self, modes: &ModeMap, stack: &mut Stack, ops: Vec<String>) {
         match ops[0].parse::<f64>() {
-            Ok(f) => stack.add(Num(f)),
+            Ok(f) => stack.push(Num(f)),
             Err(_) => ()
         }
     }

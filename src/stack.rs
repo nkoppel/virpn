@@ -1,69 +1,90 @@
 #[derive(Clone, Debug)]
-pub struct ProtoStack<T> {
-    pub stack: Vec<T>,
-    unpop_stack: Vec<T>,
-}
-
-#[derive(Clone, Debug)]
 pub enum Item {
-    Stack(ProtoStack<Item>),
+    Stack(Vec<Item>),
     Num(f64),
 }
 
-pub type Stack = ProtoStack<Item>;
+#[derive(Clone, Debug)]
+pub struct Stack {
+    above: Vec<Vec<Item>>,
+    curr: Vec<Item>,
+}
 
 use Item::*;
-use std::rc::Rc;
 
 impl Stack {
     pub fn new() -> Self {
         Stack {
-            stack: Vec::new(),
-            unpop_stack: Vec::new()
+            above: Vec::new(),
+            curr: Vec::new(),
         }
     }
 
-    pub fn add(&mut self, i: Item) {
-        self.stack.push(i);
-    }
-
-    pub fn remove(&mut self) -> Option<Item> {
-        self.stack.pop()
-    }
-
-    pub fn pop(&mut self) {
-        if let Some(i) =  self.stack.pop() {
-            self.unpop_stack.push(i);
+    pub fn from_vec(v: Vec<Item>) -> Self {
+        Stack {
+            above: Vec::new(),
+            curr: v,
         }
     }
 
-    pub fn unpop(&mut self) {
-        if let Some(i) =  self.unpop_stack.pop() {
-            self.stack.push(i);
+    pub fn into_vec(self) -> Vec<Item> {
+        self.curr
+    }
+
+    pub fn push(&mut self, i: Item) {
+        self.curr.push(i);
+    }
+
+    pub fn pop(&mut self) -> Option<Item> {
+        self.curr.pop()
+    }
+
+    pub fn up(&mut self) -> bool {
+        if self.above.is_empty() {
+            false
+        } else {
+            let mut tmp = self.above.pop().unwrap();
+            std::mem::swap(&mut tmp, &mut self.curr);
+            self.curr.push(Stack(tmp));
+            true
+        }
+    }
+
+    pub fn down(&mut self) -> bool {
+        if self.curr.is_empty() {
+            false
+        } else {
+            if let Stack(mut tmp) = self.curr.pop().unwrap() {
+                std::mem::swap(&mut tmp, &mut self.curr);
+                self.above.push(tmp);
+                true
+            } else {
+                false
+            }
         }
     }
 
     pub fn rev(&mut self) {
-        let tmp = std::mem::replace(&mut self.stack, Vec::new());
-        self.stack = tmp.into_iter().rev().collect();
+        let tmp = std::mem::replace(&mut self.curr, Vec::new());
+        self.curr = tmp.into_iter().rev().collect();
+    }
+
+    pub fn last<'a>(&'a self) -> Option<&'a Item> {
+        self.curr.last()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.stack.is_empty()
-    }
-
-    pub fn unpop_is_empty(&self) -> bool {
-        self.unpop_stack.is_empty()
+        self.curr.is_empty()
     }
 
     pub fn len(&self) -> usize {
-        self.stack.len()
+        self.curr.len()
     }
 
     pub fn apply_map(mut self, f: &impl Fn(Vec<f64>) -> f64) -> Item {
         let mut has_stack = false;
 
-        for x in self.stack.iter() {
+        for x in self.curr.iter() {
             match x {
                 Stack(_) => has_stack = true,
                 _ => {}
@@ -71,7 +92,7 @@ impl Stack {
         }
 
         if !has_stack {
-            let input = self.stack.iter().map(|x|
+            let input = self.curr.iter().map(|x|
                 match x {
                     Num(n) => *n,
                     _ => panic!()
@@ -86,34 +107,40 @@ impl Stack {
 
         loop {
             rec_stack = Stack::new();
-            for i in self.stack.iter_mut() {
+            for i in self.curr.iter_mut() {
                 match i {
-                    Num(_) => rec_stack.add(i.clone()),
+                    Num(_) => rec_stack.push(i.clone()),
                     Stack(s) => {
-                        match s.remove() {
-                            None => break,
-                            Some(x) => rec_stack.add(x)
+                        match s.pop() {
+                            None => return Stack(result.into_vec()),
+                            Some(x) => rec_stack.push(x)
                         }
                     }
                 }
             }
 
-            result.add(rec_stack.apply_map(f));
+            result.push(rec_stack.apply_map(f));
         }
 
-        Stack(result)
     }
 
-    pub fn apply_fold(&self, f: &impl Fn(f64, f64) -> f64, mut state: f64)
-        -> f64
+    pub fn apply_fold_vec(v: &Vec<Item>,
+                         f: &impl Fn(f64, f64) -> f64,
+                         mut state: f64) -> f64
     {
-        for i in self.stack.iter() {
+        for i in v.iter() {
             match i {
                 Num(n) => state = f(state, *n),
-                Stack(s) => state = s.apply_fold(f, state)
+                Stack(s) => state = Stack::apply_fold_vec(s, f, state)
             }
         }
         state
+    }
+
+    pub fn apply_fold(&self, f: &impl Fn(f64, f64) -> f64, start: f64)
+        -> f64
+    {
+        Stack::apply_fold_vec(&self.curr, f, start)
     }
 }
 
@@ -124,7 +151,7 @@ impl Item {
                 let mut len = 0;
                 let mut strs = Vec::new();
 
-                for i in s.stack.iter() {
+                for i in s.iter() {
                     let tmp = i.to_string(indent + 2, term_width);
                     len += tmp.len();
                     strs.push(tmp);
