@@ -6,20 +6,20 @@ pub struct Number_mode {
 }
 
 impl Mode for Number_mode {
-    fn get_bindings(&self) -> Vec<Vec<Key>> {
+    fn get_bindings(&self) -> Vec<Vec<Input>> {
         vec![
-            vec![Char('a')],
-            vec![Char('s')],
-            vec![Char('d')],
-            vec![Char('f')],
-            vec![Char('g')],
-            vec![Char('h')],
-            vec![Char('j')],
-            vec![Char('k')],
-            vec![Char('l')],
-            vec![Char(';')],
-            vec![Char('n')],
-            vec![Char('m')]
+            vec![Character('a')],
+            vec![Character('s')],
+            vec![Character('d')],
+            vec![Character('f')],
+            vec![Character('g')],
+            vec![Character('h')],
+            vec![Character('j')],
+            vec![Character('k')],
+            vec![Character('l')],
+            vec![Character(';')],
+            vec![Character('n')],
+            vec![Character('m')]
         ]
     }
 
@@ -38,22 +38,22 @@ impl Mode for Number_mode {
         }
     }
 
-    fn eval_bindings(&mut self, bind: Vec<Key>)
+    fn eval_bindings(&mut self, bind: Vec<Input>)
         -> (String, Action)
     {
         match bind[0] {
-            Char('a') => {self.buffer.push('1')},
-            Char('s') => {self.buffer.push('2')},
-            Char('d') => {self.buffer.push('3')},
-            Char('f') => {self.buffer.push('4')},
-            Char('g') => {self.buffer.push('5')},
-            Char('h') => {self.buffer.push('6')},
-            Char('j') => {self.buffer.push('7')},
-            Char('k') => {self.buffer.push('8')},
-            Char('l') => {self.buffer.push('9')},
-            Char(';') => {self.buffer.push('0')},
-            Char('n') => {self.buffer.push('-')},
-            Char('m') => {self.buffer.push('.')},
+            Character('a') => {self.buffer.push('1')},
+            Character('s') => {self.buffer.push('2')},
+            Character('d') => {self.buffer.push('3')},
+            Character('f') => {self.buffer.push('4')},
+            Character('g') => {self.buffer.push('5')},
+            Character('h') => {self.buffer.push('6')},
+            Character('j') => {self.buffer.push('7')},
+            Character('k') => {self.buffer.push('8')},
+            Character('l') => {self.buffer.push('9')},
+            Character(';') => {self.buffer.push('0')},
+            Character('n') => {self.buffer.push('-')},
+            Character('m') => {self.buffer.push('.')},
             _ => panic!()
         }
 

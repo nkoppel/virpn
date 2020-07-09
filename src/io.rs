@@ -1,6 +1,4 @@
-use pancurses::Input;
-use pancurses::Input::*;
-use pancurses::Window;
+use pancurses::{Input, Input::*, Window};
 
 use std::io;
 use std::io::*;
@@ -39,7 +37,7 @@ impl<T> Bindings<T> {
         out
     }
 
-    pub fn read<'a>(&'a self, window: &mut Window, queue: &mut VecDeque<Input>)
+    pub fn read<'a>(&'a self, window: &Window, queue: &mut VecDeque<Input>)
         -> Result<&'a T, Input>
     {
         window.keypad(true);
@@ -67,3 +65,24 @@ impl<T> Bindings<T> {
     }
 }
 
+use crate::stack::*;
+
+const BOTTOM_BUFFER: i32 = 2;
+
+pub fn print_stack(window: &Window, stack: &Stack) {
+    let width = window.get_max_x() as usize;
+    let height = window.get_max_y() - BOTTOM_BUFFER;
+    let mut y = height - 1;
+
+    let s = stack.to_string(width);
+    let lines = s.lines().rev();
+
+    for l in lines.take(height as usize) {
+        window.mv(y, 0);
+        window.addstr(l);
+        y -= 1;
+    }
+
+    window.mv(0, 0);
+    window.refresh();
+}

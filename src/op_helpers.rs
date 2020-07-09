@@ -41,7 +41,7 @@ pub fn fold_op(f: &'static impl Fn(f64, f64) -> f64, start: f64) -> Op {
             match stack.last() {
                 None => start,
                 Some(Num(n)) => f(start, *n),
-                Some(Stack(s)) => Stack::apply_fold_vec(s, f, start)
+                Some(List(s)) => Stack::apply_fold_vec(s, f, start)
             }
         ));
         Ok(())

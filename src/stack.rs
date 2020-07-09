@@ -1,6 +1,6 @@
 #[derive(Clone, Debug)]
 pub enum Item {
-    Stack(Vec<Item>),
+    List(Vec<Item>),
     Num(f64),
 }
 
@@ -10,13 +10,20 @@ pub struct Stack {
     curr: Vec<Item>,
 }
 
-use Item::*;
+pub use Item::*;
 
 impl Stack {
     pub fn new() -> Self {
         Stack {
             above: Vec::new(),
             curr: Vec::new(),
+        }
+    }
+
+    pub fn from_nums(v: Vec<f64>) -> Self {
+        Stack {
+            above: Vec::new(),
+            curr: v.into_iter().map(|x| Num(x)).collect(),
         }
     }
 
@@ -45,7 +52,7 @@ impl Stack {
         } else {
             let mut tmp = self.above.pop().unwrap();
             std::mem::swap(&mut tmp, &mut self.curr);
-            self.curr.push(Stack(tmp));
+            self.curr.push(List(tmp));
             true
         }
     }
@@ -54,7 +61,7 @@ impl Stack {
         if self.curr.is_empty() {
             false
         } else {
-            if let Stack(mut tmp) = self.curr.pop().unwrap() {
+            if let List(mut tmp) = self.curr.pop().unwrap() {
                 std::mem::swap(&mut tmp, &mut self.curr);
                 self.above.push(tmp);
                 true
@@ -86,7 +93,7 @@ impl Stack {
 
         for x in self.curr.iter() {
             match x {
-                Stack(_) => has_stack = true,
+                List(_) => has_stack = true,
                 _ => {}
             }
         }
@@ -110,9 +117,9 @@ impl Stack {
             for i in self.curr.iter_mut() {
                 match i {
                     Num(_) => rec_stack.push(i.clone()),
-                    Stack(s) => {
+                    List(s) => {
                         match s.pop() {
-                            None => return Stack(result.into_vec()),
+                            None => return List(result.into_vec()),
                             Some(x) => rec_stack.push(x)
                         }
                     }
@@ -131,7 +138,7 @@ impl Stack {
         for i in v.iter() {
             match i {
                 Num(n) => state = f(state, *n),
-                Stack(s) => state = Stack::apply_fold_vec(s, f, state)
+                List(s) => state = Stack::apply_fold_vec(s, f, state)
             }
         }
         state
@@ -142,25 +149,45 @@ impl Stack {
     {
         Stack::apply_fold_vec(&self.curr, f, start)
     }
+
+    pub fn to_string(&self, term_width: usize) -> String {
+        let mut len = 2;
+        let mut strs = Vec::new();
+
+        for i in self.curr.iter() {
+            let tmp = i.to_string(2, term_width);
+            len += tmp.len() + 1;
+            strs.push(tmp);
+        }
+
+        println!("{}", len);
+        if len > term_width {
+            format!("[\n  {}\n]", strs.join("\n  "))
+        } else {
+            format!("[{}]", strs.join(" "))
+        }
+    }
 }
 
 impl Item {
     pub fn to_string(&self, indent: usize, term_width: usize) -> String {
         match self {
-            Stack(s) => {
-                let mut len = 0;
+            List(s) => {
+                let mut len = 2;
                 let mut strs = Vec::new();
 
                 for i in s.iter() {
                     let tmp = i.to_string(indent + 2, term_width);
-                    len += tmp.len();
+                    len += tmp.len() + 1;
                     strs.push(tmp);
                 }
 
+                let base_indent = " ".repeat(indent);
+
                 if len + indent > term_width {
-                    format!("[{}]", strs.join(" "))
+                    format!("[\n{0}  {1}\n{0}]", base_indent, strs.join(&format!("\n{}  ", base_indent)))
                 } else {
-                    format!("[{}]", strs.join(&format!("\n{}", " ".repeat(indent))))
+                    format!("[{}]", strs.join(" "))
                 }
             },
             Num(n) => n.to_string(),
