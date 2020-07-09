@@ -27,23 +27,19 @@ impl Mode for Number_mode {
         Regex::new(r"-?\d*.?\d\+").unwrap()
     }
 
-    fn copy(&self) -> Box<dyn Mode> {
-        Box::new(self.clone())
-    }
-
     fn get_name(&self) -> String {
         "number".to_string()
     }
 
-    fn run(&mut self, modes: &ModeMap, stack: &mut Stack, ops: Vec<String>) {
+    fn eval_operators(&mut self, stack: &mut Stack, ops: &mut Vec<String>) {
         match ops[0].parse::<f64>() {
             Ok(f) => stack.push(Num(f)),
             Err(_) => ()
         }
     }
 
-    fn eval_input(&mut self, modes: &ModeMap, bind: Vec<Key>)
-        -> (String, bool, bool)
+    fn eval_bindings(&mut self, bind: Vec<Key>)
+        -> (String, Action)
     {
         match bind[0] {
             Char('a') => {self.buffer.push('1')},
@@ -61,6 +57,10 @@ impl Mode for Number_mode {
             _ => panic!()
         }
 
-        (self.buffer.clone(), false, false)
+        (self.buffer.clone(), Continue)
+    }
+
+    fn exit(&mut self) {
+        self.buffer.clear()
     }
 }
