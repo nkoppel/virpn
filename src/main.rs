@@ -17,5 +17,10 @@ fn main() {
 
     let stack = Stack::from_vec(vec![List(v); 10]);
 
-    print_stack(&window, &stack);
+    // print_command(&window, &"asdf".repeat(50), 173);
+    // window.getch();
+    // endwin();
+
+    window.keypad(true);
+    println!("{:?}", window.getch());
 }

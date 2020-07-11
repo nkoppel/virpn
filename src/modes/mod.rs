@@ -8,6 +8,10 @@ pub mod number;
 pub mod nil;
 
 use crate::modes::nil::Nil_mode;
+use crate::io::*;
+
+const KeyEsc: Input = Character('\u{1b}');
+const KeyEnt: Input = Character('\n');
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Action {
@@ -27,7 +31,7 @@ trait Mode {
 
     fn get_name(&self) -> String;
 
-    fn eval_operators(&mut self, stack: &mut Stack, ops: &mut Vec<String>);
+    fn eval_operators(&mut self, stack: &mut Stack, op: String);
 
     fn eval_bindings(&mut self, bind: Vec<Input>) -> (String, Action);
 
@@ -37,23 +41,26 @@ trait Mode {
 
 pub struct Manager_mode {
     operator_regexes: Vec<(Regex, String)>,
-    bindings: HashMap<Vec<Input>, String>,
+    bindings: Bindings<String>,
     bindings_maxlen: usize,
     modes: HashMap<String, Box<dyn Mode>>,
+    stack: Stack
 }
 
 impl Manager_mode {
     pub fn new() -> Manager_mode {
         Manager_mode {
             operator_regexes: Vec::new(),
-            bindings: HashMap::new(),
+            bindings: Bindings::new(),
             bindings_maxlen: 0,
             modes: HashMap::new(),
+            stack: Stack::new()
         }
     }
 
     pub fn build(modes: &Vec<Box<dyn Mode>>) -> Manager_mode {
         let mut out = Manager_mode::new();
+        let mut binds = Vec::new();
 
         for mode in modes {
             let name = mode.get_name();
@@ -65,49 +72,73 @@ impl Manager_mode {
                     out.bindings_maxlen = b.len();
                 }
 
-                out.bindings.insert(b, name.clone());
+                binds.push((b, name.clone()));
             }
         }
+
+        out.bindings = Bindings::from_vec(binds, vec![KeyEsc, Character('\n')]);
 
         out
     }
 
-    fn run(&mut self) -> String {
+    pub fn run_operator(&mut self, op: &str) {
+        
+    }
+
+    pub fn run(&mut self, window: &Window) {
         let mut submode_owns = false;
         let mut submode = String::new();
-        let mut key_buffer = Vec::new();
         let mut prev_output = String::new();
+        let mut inputs: Vec<Input> = Vec::new();
 
-        if !submode_owns {
-            key_buffer.push(bind[0]);
+        window.keypad(true);
+        pancurses::noecho();
 
-            if key_buffer.len() > self.bindings_maxlen {
-                key_buffer.clear();
-                prev_output = String::new();
-                return String::new();
-            }
+        loop {
+            let mut inputs;
 
-            if let Some(sub) = self.bindings.get(&key_buffer) {
-                self.modes.get_mut(&submode).unwrap().exit();
-                submode = sub.to_string();
+            if submode_owns {
+                inputs = vec![window.getch().unwrap()];
             } else {
-                return prev_output.clone();
+                loop {
+                    match self.bindings.read(&window) {
+                        Err(KeyEsc) => {
+                            self.modes.get_mut(&submode).unwrap().exit();
+                            prev_output.clear();
+                            print_command(&window, "", 0);
+                        },
+                        Err(KeyEnt) => {
+                            self.modes.get_mut(&submode).unwrap().exit();
+                            self.run_operator(&prev_output);
+                            prev_output.clear();
+                            print_command(&window, "", 0);
+                        },
+                        Ok((i, sub)) => {
+                            if sub != submode {
+                                self.modes.get_mut(&submode).unwrap().exit();
+                                submode = sub.to_string();
+                                submode_owns = false;
+                            }
+                            inputs = i;
+                            break;
+                        }
+                        Err(_) => {}
+                    }
+                }
             }
-        }
 
-        let sub = self.modes.get_mut(&submode).unwrap();
-        let (s, act) = sub.eval_bindings(key_buffer);
+            let (op, act) =
+                self.modes.get_mut(&submode).unwrap().eval_bindings(inputs);
 
-        key_buffer = Vec::new();
+            prev_output = op.clone();
+            print_command(&window, &op, op.len());
 
-        prev_output = s.clone();
-
-        if act == Exit {
-            submode_owns = false;
-            return s;
-        } else {
-            submode_owns = act == Req_own;
-            return s;
+            if act == Exit {
+                self.run_operator(&op);
+                submode_owns = false;
+            } else {
+                submode_owns = act == Req_own;
+            }
         }
     }
 }

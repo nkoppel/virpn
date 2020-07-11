@@ -21,7 +21,7 @@ impl Mode for Nil_mode {
         "nil".to_string()
     }
 
-    fn eval_operators(&mut self, stack: &mut Stack, ops: &mut Vec<String>) {
+    fn eval_operators(&mut self, stack: &mut Stack, op: String) {
         ()
     }
 

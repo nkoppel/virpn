@@ -31,8 +31,8 @@ impl Mode for Number_mode {
         "number".to_string()
     }
 
-    fn eval_operators(&mut self, stack: &mut Stack, ops: &mut Vec<String>) {
-        match ops[0].parse::<f64>() {
+    fn eval_operators(&mut self, stack: &mut Stack, op: String) {
+        match op.parse::<f64>() {
             Ok(f) => stack.push(Num(f)),
             Err(_) => ()
         }
