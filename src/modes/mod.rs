@@ -39,7 +39,7 @@ trait Mode {
     fn exit(&mut self);
 }
 
-pub struct Manager_mode {
+pub struct Ui {
     operator_regexes: Vec<(Regex, String)>,
     bindings: Bindings<String>,
     bindings_maxlen: usize,
@@ -47,9 +47,9 @@ pub struct Manager_mode {
     stack: Stack
 }
 
-impl Manager_mode {
-    pub fn new() -> Manager_mode {
-        Manager_mode {
+impl Ui {
+    pub fn new() -> Self {
+        Ui {
             operator_regexes: Vec::new(),
             bindings: Bindings::new(),
             bindings_maxlen: 0,
@@ -58,8 +58,8 @@ impl Manager_mode {
         }
     }
 
-    pub fn build(modes: &Vec<Box<dyn Mode>>) -> Manager_mode {
-        let mut out = Manager_mode::new();
+    pub fn build(modes: &Vec<Box<dyn Mode>>) -> Self {
+        let mut out = Ui::new();
         let mut binds = Vec::new();
 
         for mode in modes {
@@ -81,8 +81,18 @@ impl Manager_mode {
         out
     }
 
-    pub fn run_operator(&mut self, op: &str) {
-        
+    fn get_mode(&mut self, m: &str) -> &mut Box<dyn Mode> {
+        self.modes.get_mut(m).unwrap()
+    }
+
+    pub fn run_operator(&mut self, window: &Window, op: &str) {
+        for (r, m) in self.operator_regexes.iter() {
+            if r.is_match(op) {
+                self.modes.get_mut(m).unwrap().eval_operators(&mut self.stack, op.to_string());
+                print_stack(&window, &self.stack);
+                break;
+            }
+        }
     }
 
     pub fn run(&mut self, window: &Window) {
@@ -103,19 +113,19 @@ impl Manager_mode {
                 loop {
                     match self.bindings.read(&window) {
                         Err(KeyEsc) => {
-                            self.modes.get_mut(&submode).unwrap().exit();
+                            self.get_mode(&submode).exit();
                             prev_output.clear();
                             print_command(&window, "", 0);
                         },
                         Err(KeyEnt) => {
-                            self.modes.get_mut(&submode).unwrap().exit();
-                            self.run_operator(&prev_output);
+                            self.get_mode(&submode).exit();
+                            self.run_operator(&window, &prev_output);
                             prev_output.clear();
                             print_command(&window, "", 0);
                         },
                         Ok((i, sub)) => {
                             if sub != submode {
-                                self.modes.get_mut(&submode).unwrap().exit();
+                                self.get_mode(&submode).exit();
                                 submode = sub.to_string();
                                 submode_owns = false;
                             }
@@ -127,14 +137,13 @@ impl Manager_mode {
                 }
             }
 
-            let (op, act) =
-                self.modes.get_mut(&submode).unwrap().eval_bindings(inputs);
+            let (op, act) = self.get_mode(&submode).eval_bindings(inputs);
 
             prev_output = op.clone();
             print_command(&window, &op, op.len());
 
             if act == Exit {
-                self.run_operator(&op);
+                self.run_operator(&window, &op);
                 submode_owns = false;
             } else {
                 submode_owns = act == Req_own;
