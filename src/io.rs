@@ -67,15 +67,14 @@ impl<T> Bindings<T> where T: Clone {
         pancurses::noecho();
 
         let mut buf = Vec::new();
-        let mut c = window.getch().unwrap();
+        let mut c;
 
         loop {
-            match self.add(c) {
-                None => {
-                    c = window.getch().unwrap();
+            c = window.getch().unwrap();
+            buf.push(c);
 
-                    buf.push(c);
-                }
+            match self.add(c) {
+                None => {}
                 Some(Ok(out)) => return Ok((buf, out)),
                 Some(Err(key)) => return Err(key)
             }
@@ -88,6 +87,8 @@ use crate::stack::*;
 const BOTTOM_BUFFER: i32 = 2;
 
 pub fn print_stack(window: &Window, stack: &Stack) {
+    let (starty, startx) = window.get_cur_yx();
+
     let width = window.get_max_x() as usize;
     let height = window.get_max_y() - BOTTOM_BUFFER;
 
@@ -105,8 +106,8 @@ pub fn print_stack(window: &Window, stack: &Stack) {
             }
         }
     }
-
-    window.mv(0, 0);
+    
+    window.mv(starty, startx);
     window.refresh();
 }
 
@@ -115,6 +116,9 @@ pub fn print_command(window: &Window, cmd: &str, cursor_loc: usize) {
     let height = window.get_max_y();
 
     let len = cmd.len();
+
+    window.mv(height - 2, 0);
+    window.addstr("=".repeat(width));
 
     window.mv(height - 1, 0);
     window.clrtoeol();
@@ -139,4 +143,6 @@ pub fn print_command(window: &Window, cmd: &str, cursor_loc: usize) {
         window.addstr(cmd);
         window.mv(height - 1, cursor_loc as i32);
     }
+
+    window.refresh();
 }

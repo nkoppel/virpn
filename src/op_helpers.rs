@@ -37,13 +37,10 @@ pub fn op_2(f: &'static impl Fn(f64, f64) -> f64) -> Op {
 
 pub fn fold_op(f: &'static impl Fn(f64, f64) -> f64, start: f64) -> Op {
     Box::new(move |stack: &mut Stack| {
-        stack.push(Num(
-            match stack.last() {
-                None => start,
-                Some(Num(n)) => f(start, *n),
-                Some(List(s)) => Stack::apply_fold_vec(s, f, start)
-            }
-        ));
+        let n = stack.apply_fold(f, start);
+
+        stack.clear();
+        stack.push(Num(n));
         Ok(())
     })
 }

@@ -6,12 +6,14 @@ pub use regex::Regex;
 
 pub mod number;
 pub mod nil;
+pub mod ops;
 
 use crate::modes::nil::Nil_mode;
 use crate::io::*;
 
 const KeyEsc: Input = Character('\u{1b}');
 const KeyEnt: Input = Character('\n');
+const KeySpc: Input = Character(' ');
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Action {
@@ -22,7 +24,7 @@ pub enum Action {
 
 pub use Action::*;
 
-trait Mode {
+pub trait Mode {
     // set of bindings used to enter this mode
     fn get_bindings(&self) -> Vec<Vec<Input>>;
 
@@ -58,11 +60,11 @@ impl Ui {
         }
     }
 
-    pub fn build(modes: &Vec<Box<dyn Mode>>) -> Self {
+    pub fn build(modes: Vec<Box<dyn Mode>>) -> Self {
         let mut out = Ui::new();
         let mut binds = Vec::new();
 
-        for mode in modes {
+        for mode in modes.into_iter() {
             let name = mode.get_name();
             let regex = mode.get_operator_regex();
             out.operator_regexes.push((regex, name.clone()));
@@ -74,9 +76,10 @@ impl Ui {
 
                 binds.push((b, name.clone()));
             }
+            out.modes.insert(name, mode);
         }
 
-        out.bindings = Bindings::from_vec(binds, vec![KeyEsc, Character('\n')]);
+        out.bindings = Bindings::from_vec(binds, vec![KeyEsc, KeyEnt, KeySpc]);
 
         out
     }
@@ -97,7 +100,7 @@ impl Ui {
 
     pub fn run(&mut self, window: &Window) {
         let mut submode_owns = false;
-        let mut submode = String::new();
+        let mut submode = "nil".to_string();
         let mut prev_output = String::new();
         let mut inputs: Vec<Input> = Vec::new();
 
@@ -117,7 +120,7 @@ impl Ui {
                             prev_output.clear();
                             print_command(&window, "", 0);
                         },
-                        Err(KeyEnt) => {
+                        Err(KeyEnt) | Err(KeySpc) => {
                             self.get_mode(&submode).exit();
                             self.run_operator(&window, &prev_output);
                             prev_output.clear();
@@ -126,6 +129,7 @@ impl Ui {
                         Ok((i, sub)) => {
                             if sub != submode {
                                 self.get_mode(&submode).exit();
+                                self.run_operator(&window, &prev_output);
                                 submode = sub.to_string();
                                 submode_owns = false;
                             }
@@ -144,6 +148,7 @@ impl Ui {
 
             if act == Exit {
                 self.run_operator(&window, &op);
+                prev_output.clear();
                 submode_owns = false;
             } else {
                 submode_owns = act == Req_own;

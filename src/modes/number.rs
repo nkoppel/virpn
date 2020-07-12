@@ -5,6 +5,14 @@ pub struct Number_mode {
     buffer: String
 }
 
+impl Number_mode {
+    pub fn new() -> Self {
+        Number_mode {
+            buffer: String::new()
+        }
+    }
+}
+
 impl Mode for Number_mode {
     fn get_bindings(&self) -> Vec<Vec<Input>> {
         vec![
@@ -19,12 +27,13 @@ impl Mode for Number_mode {
             vec![Character('l')],
             vec![Character(';')],
             vec![Character('n')],
-            vec![Character('m')]
+            vec![Character('m')],
+            vec![KeyBackspace]
         ]
     }
 
     fn get_operator_regex(&self) -> Regex {
-        Regex::new(r"-?\d*.?\d\+").unwrap()
+        Regex::new(r"-?\d*.?\d+").unwrap()
     }
 
     fn get_name(&self) -> String {
@@ -54,6 +63,7 @@ impl Mode for Number_mode {
             Character(';') => {self.buffer.push('0')},
             Character('n') => {self.buffer.push('-')},
             Character('m') => {self.buffer.push('.')},
+            KeyBackspace   => {self.buffer.pop();},
             _ => panic!()
         }
 

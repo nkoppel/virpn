@@ -14,7 +14,7 @@ impl Mode for Nil_mode {
     }
 
     fn get_operator_regex(&self) -> Regex {
-        Regex::new("").unwrap()
+        Regex::new("[[:^ascii:]]").unwrap()
     }
 
     fn get_name(&self) -> String {
@@ -25,8 +25,6 @@ impl Mode for Nil_mode {
         ()
     }
 
-    // output: current string representation of mode, whether this mode is 
-    // exiting, whether to pass all bindings to this mode
     fn eval_bindings(&mut self, bind: Vec<Input>)
         -> (String, Action)
     {

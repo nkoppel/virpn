@@ -84,6 +84,10 @@ impl Stack {
         self.curr.is_empty()
     }
 
+    pub fn clear(&mut self) {
+        self.curr.clear();
+    }
+
     pub fn len(&self) -> usize {
         self.curr.len()
     }
@@ -151,21 +155,10 @@ impl Stack {
     }
 
     pub fn to_string(&self, term_width: usize) -> String {
-        let mut len = 2;
-        let mut strs = Vec::new();
+        let strs: Vec<String> =
+            self.curr.iter() .map(|x| x.to_string(0, term_width)).collect();
 
-        for i in self.curr.iter() {
-            let tmp = i.to_string(2, term_width);
-            len += tmp.len() + 1;
-            strs.push(tmp);
-        }
-
-        println!("{}", len);
-        if len > term_width {
-            format!("[\n  {}\n]", strs.join("\n  "))
-        } else {
-            format!("[{}]", strs.join(" "))
-        }
+        strs.join("\n")
     }
 }
 

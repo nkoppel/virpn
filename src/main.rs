@@ -6,6 +6,10 @@ mod modes;
 
 use crate::stack::*;
 use crate::io::*;
+use crate::modes::*;
+use crate::modes::number::Number_mode;
+use crate::modes::nil::Nil_mode;
+use crate::modes::ops::Op_mode;
 
 use pancurses::{initscr, endwin};
 
@@ -20,7 +24,16 @@ fn main() {
     // print_command(&window, &"asdf".repeat(50), 173);
     // window.getch();
     // endwin();
+    
+    let mut ui = Ui::build(vec![
+        Box::new(Number_mode::new()),
+        Box::new(Nil_mode::new()),
+        Box::new(Op_mode::new()),
+    ]);
 
     window.keypad(true);
-    println!("{:?}", window.getch());
+
+    ui.run(&window);
+
+    endwin();
 }
