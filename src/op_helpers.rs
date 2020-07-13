@@ -5,6 +5,10 @@ pub type Res<T> = Result<T, String>;
 
 pub type Op = Box<Fn(&mut Stack) -> Res<()>>;
 
+pub fn basic(f: &'static impl Fn(&mut Stack) -> ()) -> Op {
+    Box::new(move |s| { f(s); Ok(()) })
+}
+
 pub fn op_1(f: &'static impl Fn(f64) -> f64) -> Op {
     Box::new(move |stack: &mut Stack| {
         if stack.is_empty() {

@@ -21,10 +21,6 @@ fn main() {
 
     let stack = Stack::from_vec(vec![List(v); 10]);
 
-    // print_command(&window, &"asdf".repeat(50), 173);
-    // window.getch();
-    // endwin();
-    
     let mut ui = Ui::build(vec![
         Box::new(Number_mode::new()),
         Box::new(Nil_mode::new()),

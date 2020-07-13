@@ -38,7 +38,7 @@ impl Mode for Op_mode {
         let mut names: Vec<String> =
             self.bindings.values().map(|x| escape(&x[..])).collect();
 
-        Regex::new(&names.join("|")).unwrap()
+        Regex::new(&format!("^{}$", names.join("$|^"))).unwrap()
     }
 
     fn get_name(&self) -> String {
@@ -46,7 +46,9 @@ impl Mode for Op_mode {
     }
 
     fn eval_operators(&mut self, stack: &mut Stack, op: String) {
-        self.ops.get(&op).unwrap()(stack);
+        if let Some(f) = self.ops.get(&op) {
+            f(stack);
+        }
     }
 
     fn eval_bindings(&mut self, bind: Vec<Input>)

@@ -33,7 +33,7 @@ impl Mode for Number_mode {
     }
 
     fn get_operator_regex(&self) -> Regex {
-        Regex::new(r"-?\d*.?\d+").unwrap()
+        Regex::new(r"^-?\d*.?\d+$").unwrap()
     }
 
     fn get_name(&self) -> String {
@@ -65,6 +65,16 @@ impl Mode for Number_mode {
             Character('m') => {self.buffer.push('.')},
             KeyBackspace   => {self.buffer.pop();},
             _ => panic!()
+        }
+
+        if !self.buffer.is_empty() {
+            let tmp = &self.buffer[..self.buffer.len() - 1];
+
+            if tmp.len() > 1 || tmp == "." {
+                if let Err(_) = self.buffer.parse::<f64>() {
+                    self.buffer.pop();
+                }
+            }
         }
 
         (self.buffer.clone(), Continue)

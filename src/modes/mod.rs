@@ -99,6 +99,7 @@ impl Ui {
     }
 
     pub fn run(&mut self, window: &Window) {
+        let mut run_on_mode_change = true;
         let mut submode_owns = false;
         let mut submode = "nil".to_string();
         let mut prev_output = String::new();
@@ -106,6 +107,8 @@ impl Ui {
 
         window.keypad(true);
         pancurses::noecho();
+
+        print_command(&window, "", 0);
 
         loop {
             let mut inputs;
@@ -123,14 +126,16 @@ impl Ui {
                         Err(KeyEnt) | Err(KeySpc) => {
                             self.get_mode(&submode).exit();
                             self.run_operator(&window, &prev_output);
-                            prev_output.clear();
-                            print_command(&window, "", 0);
+                            run_on_mode_change = false;
                         },
                         Ok((i, sub)) => {
                             if sub != submode {
                                 self.get_mode(&submode).exit();
-                                self.run_operator(&window, &prev_output);
+                                if run_on_mode_change {
+                                    self.run_operator(&window, &prev_output);
+                                }
                                 submode = sub.to_string();
+                                run_on_mode_change = true;
                                 submode_owns = false;
                             }
                             inputs = i;
@@ -148,7 +153,7 @@ impl Ui {
 
             if act == Exit {
                 self.run_operator(&window, &op);
-                prev_output.clear();
+                run_on_mode_change = false;
                 submode_owns = false;
             } else {
                 submode_owns = act == Req_own;
