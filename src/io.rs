@@ -4,13 +4,75 @@ use std::io;
 use std::io::*;
 use std::result::Result;
 
+use std::rc::Rc;
+use std::cell::Cell;
 use std::collections::{HashMap, VecDeque};
+
+#[derive(Clone, Debug)]
+enum BindTree<T> {
+    Branch(HashMap<Input, BindTree<T>>),
+    Leaf(T)
+}
+
+use BindTree::*;
 
 pub struct Bindings<T> {
     maxlen: usize,
     escapes: Vec<Input>,
-    binds: HashMap<Vec<Input>, T>,
-    buf: Vec<Input>
+    tree: BindTree<T>,
+    buf: Vec<Input>,
+    out_buf: Vec<Input>
+}
+
+impl<T> BindTree<T> where T: Clone {
+    pub fn new() -> Self {
+        Branch(HashMap::new())
+    }
+
+    pub fn insert<'a, I>(&mut self, mut key: I, val: T)
+        where I: Iterator<Item=&'a Input>
+    {
+        if let Branch(map) = self {
+            if let Some(input) = key.next() {
+                match map.get_mut(&input) {
+                    Some(tree) => {
+                        tree.insert(key, val);
+                    }
+                    None => {
+                        let mut tree = Self::new();
+                        tree.insert(key, val);
+                        map.insert(*input, tree);
+                    }
+                }
+            } else {
+                *self = Leaf(val)
+            }
+        }
+    }
+
+    pub fn get<'a, I>(&self, mut key: I) -> (Option<T>, bool)
+        where I: Iterator<Item=&'a Input>
+    {
+        match self {
+            Branch(map) => {
+                if let Some(i) = key.next() {
+                    if map.contains_key(i) {
+                        return map.get(i).unwrap().get(key);
+                    } else {
+                        return (None, false);
+                    }
+                }
+                (None, true)
+            }
+            Leaf(t) => {
+                if key.next() == None {
+                    (Some(t.clone()), true)
+                } else {
+                    (None, false)
+                }
+            }
+        }
+    }
 }
 
 impl<T> Bindings<T> where T: Clone {
@@ -18,8 +80,9 @@ impl<T> Bindings<T> where T: Clone {
         Bindings {
             maxlen: 0,
             escapes: Vec::new(),
-            binds: HashMap::new(),
+            tree: BindTree::new(),
             buf: Vec::new(),
+            out_buf: Vec::new()
         }
     }
 
@@ -28,12 +91,8 @@ impl<T> Bindings<T> where T: Clone {
 
         out.escapes = escapes;
 
-        for (i, o) in v {
-            if i.len() > out.maxlen {
-                out.maxlen = i.len();
-            }
-
-            out.binds.insert(i, o);
+        for (i, o) in v.into_iter() {
+            out.tree.insert(i.iter(), o);
         }
 
         out
@@ -47,16 +106,17 @@ impl<T> Bindings<T> where T: Clone {
 
         self.buf.push(i);
 
-        if self.buf.len() > self.maxlen {
-            self.buf.clear();
-            return None;
-        }
-        match self.binds.get(&self.buf) {
-            Some(out) => {
-                self.buf.clear();
-                Some(Ok((*out).clone()))
+        match self.tree.get(self.buf.iter()) {
+            (Some(out), _) => {
+                self.out_buf = std::mem::replace(&mut self.buf, Vec::new());
+                Some(Ok((out).clone()))
             }
-            None => return None
+            (None, valid_prefix) => {
+                if !valid_prefix {
+                    self.buf.clear();
+                }
+                None
+            }
         }
     }
 
@@ -66,16 +126,14 @@ impl<T> Bindings<T> where T: Clone {
         window.keypad(true);
         pancurses::noecho();
 
-        let mut buf = Vec::new();
         let mut c;
 
         loop {
             c = window.getch().unwrap();
-            buf.push(c);
 
             match self.add(c) {
                 None => {}
-                Some(Ok(out)) => return Ok((buf, out)),
+                Some(Ok(out)) => return Ok((self.out_buf.clone(), out)),
                 Some(Err(key)) => return Err(key)
             }
         }
