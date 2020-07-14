@@ -1,12 +1,13 @@
 pub use std::collections::{HashMap, VecDeque};
 pub use crate::stack::Stack;
 pub use pancurses::{Input, Input::*, Window};
-pub use crate::stack::Item::*;
+pub use crate::stack::{Item, Item::*};
 pub use regex::Regex;
 
 pub mod number;
 pub mod nil;
 pub mod ops;
+pub mod var;
 
 use crate::modes::nil::Nil_mode;
 use crate::io::*;
@@ -79,7 +80,8 @@ impl Ui {
             out.modes.insert(name, mode);
         }
 
-        out.bindings = Bindings::from_vec(binds, vec![KeyEsc, KeyEnt, KeySpc]);
+        out.bindings =
+            Bindings::from_vec(binds, vec![KeyEsc, KeyDC, KeyEnt, KeySpc]);
 
         out
     }
@@ -118,7 +120,7 @@ impl Ui {
             } else {
                 loop {
                     match self.bindings.read(&window) {
-                        Err(KeyEsc) => {
+                        Err(KeyEsc) | Err(KeyDC) => {
                             self.get_mode(&submode).exit();
                             prev_output.clear();
                             print_command(&window, "", 0);
@@ -135,9 +137,9 @@ impl Ui {
                                     self.run_operator(&window, &prev_output);
                                 }
                                 submode = sub.to_string();
-                                run_on_mode_change = true;
                                 submode_owns = false;
                             }
+                            run_on_mode_change = true;
                             inputs = i;
                             break;
                         }

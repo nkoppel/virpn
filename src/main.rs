@@ -7,9 +7,13 @@ mod modes;
 use crate::stack::*;
 use crate::io::*;
 use crate::modes::*;
-use crate::modes::number::Number_mode;
-use crate::modes::nil::Nil_mode;
-use crate::modes::ops::Op_mode;
+
+use crate::modes::{
+    number::Number_mode,
+    nil::Nil_mode,
+    ops::Op_mode,
+    var::Var_mode
+};
 
 use pancurses::{initscr, endwin};
 
@@ -25,6 +29,7 @@ fn main() {
         Box::new(Number_mode::new()),
         Box::new(Nil_mode::new()),
         Box::new(Op_mode::new()),
+        Box::new(Var_mode::new()),
     ]);
 
     window.keypad(true);
