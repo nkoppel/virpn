@@ -48,3 +48,10 @@ pub fn fold_op(f: &'static impl Fn(f64, f64) -> f64, start: f64) -> Op {
         Ok(())
     })
 }
+
+pub fn constant(x: f64) -> Op {
+    Box::new(move |stack: &mut Stack| {
+        stack.push(Num(x));
+        Ok(())
+    })
+}

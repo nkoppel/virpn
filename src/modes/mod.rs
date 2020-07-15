@@ -12,9 +12,9 @@ pub mod var;
 use crate::modes::nil::Nil_mode;
 use crate::io::*;
 
-const KeyEsc: Input = Character('\u{1b}');
-const KeyEnt: Input = Character('\n');
-const KeySpc: Input = Character(' ');
+const KEY_ESC: Input = Character('\u{1b}');
+const KEY_ENT: Input = Character('\n');
+const KEY_SPC: Input = Character(' ');
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Action {
@@ -81,7 +81,7 @@ impl Ui {
         }
 
         out.bindings =
-            Bindings::from_vec(binds, vec![KeyEsc, KeyDC, KeyEnt, KeySpc]);
+            Bindings::from_vec(binds, vec![KEY_ESC, KeyDC, KEY_ENT, KEY_SPC]);
 
         out
     }
@@ -120,12 +120,12 @@ impl Ui {
             } else {
                 loop {
                     match self.bindings.read(&window) {
-                        Err(KeyEsc) | Err(KeyDC) => {
+                        Err(KEY_ESC) | Err(KeyDC) => {
                             self.get_mode(&submode).exit();
                             prev_output.clear();
                             print_command(&window, "", 0);
                         },
-                        Err(KeyEnt) | Err(KeySpc) => {
+                        Err(KEY_ENT) | Err(KEY_SPC) => {
                             self.get_mode(&submode).exit();
                             self.run_operator(&window, &prev_output);
                             run_on_mode_change = false;
