@@ -1,6 +1,6 @@
 use pancurses::{Input, Input::*};
 use crate::stack::Stack;
-use crate::op_helpers::*;
+use crate::modes::ops::helpers::*;
 use std::collections::HashMap;
 
 pub fn bind_from_str(s: &str) -> Vec<Input> {

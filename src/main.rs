@@ -1,7 +1,5 @@
 mod io;
 mod stack;
-mod op_helpers;
-mod op;
 mod modes;
 
 use crate::stack::*;

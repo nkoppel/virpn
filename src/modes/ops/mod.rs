@@ -1,7 +1,11 @@
 use regex::escape;
 use crate::modes::*;
-use crate::op_helpers::Op;
-use crate::op::gen_ops;
+
+mod table; 
+mod helpers;
+
+use crate::modes::ops::helpers::Op;
+use crate::modes::ops::table::gen_ops;
 
 pub struct Op_mode{
     radian: bool,
