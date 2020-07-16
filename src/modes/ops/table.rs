@@ -36,6 +36,7 @@ fn duplicate(stack: &mut Stack) -> Res<()> {
 }
 
 use std::f64::consts;
+use std::f64;
 
 pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
     vec![
@@ -66,9 +67,9 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("pi"    , vec!["cp"            ], constant(consts::PI)),
         ("e"     , vec!["ce"            ], constant(consts::E)),
         ("sqrt_2", vec!["cq"            ], constant(consts::SQRT_2)),
-        ("nan"   , vec!["cn"            ], constant(consts::SQRT_2)),
-        ("inf"   , vec!["cip"           ], constant(consts::SQRT_2)),
-        ("-inf"  , vec!["cin"           ], constant(consts::SQRT_2)),
+        ("nan"   , vec!["cn"            ], constant(f64::NAN)),
+        ("inf"   , vec!["cip"           ], constant(f64::INFINITY)),
+        ("-inf"  , vec!["cin"           ], constant(f64::NEG_INFINITY)),
 
         ("sum"   , vec!["isu"           ], fold_op(&|x, y| x + y, 0.)),
         ("msum"  , vec!["ism"           ], fold_op(&|x, y| x * y, 1.)),
