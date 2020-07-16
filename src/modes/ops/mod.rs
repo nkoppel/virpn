@@ -19,8 +19,10 @@ impl Op_mode {
         let mut bindings = HashMap::new();
         let mut ops = HashMap::new();
 
-        for (name, bind, op) in gen_ops() {
-            bindings.insert(bind, name.clone());
+        for (name, binds, op) in gen_ops() {
+            for bind in binds {
+                bindings.insert(bind, name.clone());
+            }
             ops.insert(name, op);
         }
 
