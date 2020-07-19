@@ -102,7 +102,7 @@ impl<T> Bindings<T> where T: Clone {
             return Some(Err(i));
         }
 
-        self.buf.push(i);
+        self.buf.push(i.clone());
 
         match self.tree.get(self.buf.iter()) {
             (Some(out), _) => {
@@ -112,6 +112,10 @@ impl<T> Bindings<T> where T: Clone {
             (None, valid_prefix) => {
                 if !valid_prefix {
                     self.buf.clear();
+
+                    if self.buf.len() > 1 {
+                        return self.add(i);
+                    }
                 }
                 None
             }

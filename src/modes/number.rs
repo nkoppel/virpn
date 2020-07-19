@@ -1,19 +1,14 @@
 use crate::modes::*;
 
 #[derive(Clone, Debug)]
+pub struct Number_global {}
+
+#[derive(Clone, Debug)]
 pub struct Number_mode {
     buffer: String
 }
 
-impl Number_mode {
-    pub fn new() -> Self {
-        Number_mode {
-            buffer: String::new()
-        }
-    }
-}
-
-impl Mode for Number_mode {
+impl GlobalMode for Number_global {
     fn get_bindings(&self) -> Vec<Vec<Input>> {
         vec![
             vec![Character('a')],
@@ -33,22 +28,30 @@ impl Mode for Number_mode {
     }
 
     fn get_operator_regex(&self) -> Regex {
-        Regex::new(r"^-?\d*.?\d+$").unwrap()
+        Regex::new(r"-?\d*.?\d+").unwrap()
     }
 
     fn get_name(&self) -> String {
         "number".to_string()
     }
 
-    fn eval_operators(&mut self, stack: &mut Stack, op: String) {
+    fn eval_operators(&mut self, ui: &mut Ui, op: String) {
         match op.parse::<f64>() {
-            Ok(f) => stack.push(Num(f)),
+            Ok(f) => ui.get_stack().push(Num(f)),
             Err(_) => ()
         }
     }
 
+    fn build_local(self: Rc<Self>, init: String) -> Box<dyn LocalMode> {
+        Box::new(Number_mode {
+            buffer: init
+        })
+    }
+}
+
+impl LocalMode for Number_mode {
     fn eval_bindings(&mut self, bind: Vec<Input>)
-        -> (String, Action)
+        -> (String, usize, Action)
     {
         match bind[0] {
             Character('a') => {self.buffer.push('1')},
@@ -77,10 +80,6 @@ impl Mode for Number_mode {
             }
         }
 
-        (self.buffer.clone(), Continue)
-    }
-
-    fn exit(&mut self) {
-        self.buffer.clear()
+        (self.buffer.clone(), self.buffer.len(), Continue)
     }
 }

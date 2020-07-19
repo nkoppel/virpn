@@ -7,10 +7,10 @@ use crate::io::*;
 use crate::modes::*;
 
 use crate::modes::{
-    number::Number_mode,
-    nil::Nil_mode,
-    ops::Op_mode,
-    var::Var_mode
+    number::Number_global,
+    // nil::Nil_mode,
+    // ops::Op_mode,
+    // var::Var_mode
 };
 
 use pancurses::{initscr, endwin};
@@ -24,10 +24,10 @@ fn main() {
     let stack = Stack::from_vec(vec![List(v); 10]);
 
     let mut ui = Ui::build(vec![
-        Box::new(Number_mode::new()),
-        Box::new(Nil_mode::new()),
-        Box::new(Op_mode::new()),
-        Box::new(Var_mode::new()),
+        Rc::new(Number_global{}),
+        // Box::new(Nil_mode::new()),
+        // Box::new(Op_mode::new()),
+        // Box::new(Var_mode::new()),
     ]);
 
     window.keypad(true);
