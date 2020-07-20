@@ -59,7 +59,6 @@ pub trait GlobalMode {
 pub struct Ui {
     operator_regexes: Vec<(Regex, String)>,
     bindings: Bindings<String>,
-    bindings_maxlen: usize,
     modes: HashMap<String, Rc<GlobalMode>>,
     mode_stack: Vec<(String, Box<dyn LocalMode>)>,
     stack: Stack
@@ -70,7 +69,6 @@ impl Ui {
         Ui {
             operator_regexes: Vec::new(),
             bindings: Bindings::new(),
-            bindings_maxlen: 0,
             modes: HashMap::new(),
             mode_stack: Vec::new(),
             stack: Stack::new()
@@ -87,10 +85,6 @@ impl Ui {
             out.operator_regexes.push((regex, name.clone()));
 
             for b in mode.get_bindings() {
-                if b.len() > out.bindings_maxlen {
-                    out.bindings_maxlen = b.len();
-                }
-
                 binds.push((b, name.clone()));
             }
             out.modes.insert(name, mode);
