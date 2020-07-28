@@ -8,9 +8,11 @@ pub use crate::stack::{Item, Item::*};
 pub use pancurses::{Input, Input::*, Window};
 pub use regex::Regex;
 
+pub use std::mem;
+
 pub mod number;
 pub mod ops;
-// pub mod var;
+pub mod var;
 
 use crate::io::*;
 use std::borrow::BorrowMut;
@@ -107,8 +109,10 @@ impl Ui {
         while !ops.is_empty() {
             let mut mode = String::new();
 
+            // pancurses::endwin();
+            // println!("{:?}", self.operator_regexes);
             for (regex, m) in self.operator_regexes.iter() {
-                if regex.is_match_at(&ops, 0) {
+                if regex.is_match(&ops) {
                     mode = m.to_string();
                     break;
                 }
@@ -120,6 +124,10 @@ impl Ui {
                 break;
             }
         }
+    }
+
+    pub fn print_stack(&self) {
+        print_stack(&self.window, &self.stack);
     }
 }
 
@@ -174,7 +182,7 @@ impl Ui_helper {
         let (bind, mode) =
             if !self.init_bind.is_empty() {
                 self.bindings.read_from_vec(
-                    &std::mem::replace(&mut self.init_bind, Vec::new())
+                    &mem::replace(&mut self.init_bind, Vec::new())
                 )
             } else {
                 self.bindings.read(&self.ui.window)

@@ -44,7 +44,7 @@ impl Mode for Op_mode {
         let mut names: Vec<String> =
             self.bindings.values().map(|x| escape(&x[..])).collect();
 
-        Regex::new(&format!("^{}$", names.join("$|^"))).unwrap()
+        Regex::new(&format!("^{}", names.join("|^"))).unwrap()
     }
 
     fn get_name(&self) -> String {
@@ -52,14 +52,16 @@ impl Mode for Op_mode {
     }
 
     fn eval_operators(&mut self, ui: &mut Ui, ops: &mut String) {
-        let spc = ops.find(' ').unwrap_or(0);
+        let spc = ops.find(' ').unwrap_or(ops.len());
         let op = &ops[..spc];
 
         if let Some(f) = self.ops.get(op) {
             f(ui.get_stack());
         }
 
-        *ops = ops[spc + 1..].to_string();
+        *ops = ops[(spc + 1).min(ops.len())..].to_string();
+
+        ui.insert_mode("ops".to_string(), Box::new(Op_mode::new()));
     }
 
     fn eval_bindings(&self, mut ui: Ui_helper, _: HashMap<&str, &str>)
@@ -70,6 +72,8 @@ impl Mode for Op_mode {
         let op = self.bindings.get(&bind).unwrap().to_string();
 
         let len = op.len();
+
+        ui.print_output(&op, len);
 
         ((op, len), res)
     }

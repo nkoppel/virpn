@@ -22,18 +22,23 @@ impl Mode for Number_mode {
     }
 
     fn get_operator_regex(&self) -> Regex {
-        Regex::new(r"-?\d*.?\d+").unwrap()
+        Regex::new(r"^-?\d*.?\d+").unwrap()
     }
 
     fn get_name(&self) -> String {
         "number".to_string()
     }
 
-    fn eval_operators(&mut self, ui: &mut Ui, op: &mut String) {
+    fn eval_operators(&mut self, ui: &mut Ui, ops: &mut String) {
+        let spc = ops.find(' ').unwrap_or(ops.len());
+        let op = &ops[0..spc];
+
         match op.parse::<f64>() {
             Ok(f) => ui.get_stack().push(Num(f)),
             Err(_) => ()
         }
+
+        *ops = ops[(spc + 1).min(ops.len())..].to_string();
 
         ui.insert_mode("number".to_string(), Box::new(Number_mode{}));
     }

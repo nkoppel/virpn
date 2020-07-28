@@ -27,18 +27,20 @@ impl Mode for Var_mode {
     }
 
     fn get_operator_regex(&self) -> Regex {
-        Regex::new("[sg]et +[[:alpha:]]").unwrap()
+        Regex::new("^[sg]et +[[:alpha:]]").unwrap()
     }
 
     fn get_name(&self) -> String {
         "var".to_string()
     }
 
-    fn eval_operators(&mut self, stack: &mut Stack, op: String) {
-        let mut words = op.split(" ");
+    fn eval_operators(&mut self, ui: &mut Ui, ops: &mut String) {
+        let mut words = ops.split(" ");
 
         let word1 = if let Some(w) = words.next() {w} else {return};
         let word2 = if let Some(w) = words.next() {w} else {return};
+
+        let stack = ui.get_stack();
 
         if word1 == "get" {
             stack.push(self.values[index_from_str(word2)].clone());
@@ -47,34 +49,47 @@ impl Mode for Var_mode {
                 self.values[index_from_str(word2)] = i;
             }
         }
+
+        *ops = words.collect::<Vec<_>>().join(" ");
+
+        ui.insert_mode(
+            self.get_name(),
+            Box::new(mem::replace(self, Var_mode::new()))
+        );
     }
 
-    fn eval_bindings(&mut self, bind: Vec<Input>)
-        -> (String, Action)
+    fn eval_bindings(&self, mut ui: Ui_helper, _: HashMap<&str, &str>)
+        -> ModeRes<(String, usize)>
     {
-        if let Some(Character(chr)) = bind.first() {
-            if self.optype.is_empty() {
-                if chr == &'x' {
-                    self.optype = "get".to_string();
-                    return (self.optype.clone(), Req_own);
-                } else if chr == &'z' {
-                    self.optype = "set".to_string();
-                    return (self.optype.clone(), Req_own);
-                }
-            } else {
-                if VAR_NAMES.contains(&chr.to_string()) {
-                    let tmp =
-                        std::mem::replace(&mut self.optype, String::new());
+        let mut tmp = ui.get_next_binding();
 
-                    return (format!("{} {}", tmp, chr), Exit);
-                }
-            }
+        if let (_, Some(_)) = tmp {
+            return ((String::new(), 0), tmp.1);
         }
 
-        return (String::new(), Continue);
-    }
+        let setting = tmp.0 == vec![Character('z')];
+        let mut op = if setting {"set "} else {"get "}.to_string();
 
-    fn exit(&mut self) {
-        self.optype.clear();
+        ui.print_output(&op, 4);
+
+        for c in VAR_NAMES.chars() {
+            ui.add_escape_binding(vec![Character(c)]);
+        }
+
+
+        tmp = ui.get_next_binding();
+
+        if let (_, Some(_)) = tmp {
+            return ((String::new(), 0), tmp.1);
+        }
+
+        if let Character(c) = tmp.0[0] {
+            op.push(c);
+            ui.print_output(&op, 5);
+
+            return ((op, 5), None);
+        } else {
+            panic!()
+        }
     }
 }
