@@ -1,14 +1,9 @@
 use crate::modes::*;
 
 #[derive(Clone, Debug)]
-pub struct Number_global {}
+pub struct Number_mode {}
 
-#[derive(Clone, Debug)]
-pub struct Number_mode {
-    buffer: String
-}
-
-impl GlobalMode for Number_global {
+impl Mode for Number_mode {
     fn get_bindings(&self) -> Vec<Vec<Input>> {
         vec![
             vec![Character('a')],
@@ -23,7 +18,6 @@ impl GlobalMode for Number_global {
             vec![Character(';')],
             vec![Character('n')],
             vec![Character('m')],
-            vec![KeyBackspace]
         ]
     }
 
@@ -35,51 +29,64 @@ impl GlobalMode for Number_global {
         "number".to_string()
     }
 
-    fn eval_operators(&mut self, ui: &mut Ui, op: String) {
+    fn eval_operators(&mut self, ui: &mut Ui, op: &mut String) {
         match op.parse::<f64>() {
             Ok(f) => ui.get_stack().push(Num(f)),
             Err(_) => ()
         }
+
+        ui.insert_mode("number".to_string(), Box::new(Number_mode{}));
     }
 
-    fn build_local(self: Rc<Self>, init: String) -> Box<dyn LocalMode> {
-        Box::new(Number_mode {
-            buffer: init
-        })
-    }
-}
-
-impl LocalMode for Number_mode {
-    fn eval_bindings(&mut self, bind: Vec<Input>)
-        -> (String, usize, Action)
+    fn eval_bindings(&self, mut ui: Ui_helper, init: HashMap<&str, &str>)
+        -> ModeRes<(String, usize)>
     {
-        match bind[0] {
-            Character('a') => {self.buffer.push('1')},
-            Character('s') => {self.buffer.push('2')},
-            Character('d') => {self.buffer.push('3')},
-            Character('f') => {self.buffer.push('4')},
-            Character('g') => {self.buffer.push('5')},
-            Character('h') => {self.buffer.push('6')},
-            Character('j') => {self.buffer.push('7')},
-            Character('k') => {self.buffer.push('8')},
-            Character('l') => {self.buffer.push('9')},
-            Character(';') => {self.buffer.push('0')},
-            Character('n') => {self.buffer.push('-')},
-            Character('m') => {self.buffer.push('.')},
-            KeyBackspace   => {self.buffer.pop();},
-            _ => panic!()
-        }
+        let mut buffer = init.get("text").unwrap_or(&"").to_string();
+        let mut loc = buffer.len();
 
-        if !self.buffer.is_empty() {
-            let tmp = &self.buffer[..self.buffer.len() - 1];
+        ui.add_escape_binding(vec![KeyBackspace]);
+        ui.add_escape_binding(vec![KeyLeft]);
+        ui.add_escape_binding(vec![KeyRight]);
 
-            if tmp.len() > 1 || tmp == "." {
-                if let Err(_) = self.buffer.parse::<f64>() {
-                    self.buffer.pop();
+        loop {
+            ui.print_output(&buffer, loc);
+
+            let (bind, res) = ui.get_next_binding();
+
+            match bind[0] {
+                Character('a') => {buffer.insert(loc, '1'); loc += 1}
+                Character('s') => {buffer.insert(loc, '2'); loc += 1}
+                Character('d') => {buffer.insert(loc, '3'); loc += 1}
+                Character('f') => {buffer.insert(loc, '4'); loc += 1}
+                Character('g') => {buffer.insert(loc, '5'); loc += 1}
+                Character('h') => {buffer.insert(loc, '6'); loc += 1}
+                Character('j') => {buffer.insert(loc, '7'); loc += 1}
+                Character('k') => {buffer.insert(loc, '8'); loc += 1}
+                Character('l') => {buffer.insert(loc, '9'); loc += 1}
+                Character(';') => {buffer.insert(loc, '0'); loc += 1}
+                Character('n') => {
+                    if loc == 0 {
+                        buffer.insert(loc, '-');
+                        loc = 1
+                    }
                 }
+                Character('m') => {
+                    if !buffer.contains('.') {
+                        buffer.insert(loc, '.');
+                        loc += 1;
+                    }
+                }
+
+                KeyLeft        => loc = loc.saturating_sub(1),
+                KeyRight       => if loc < buffer.len() {loc += 1},
+                KeyBackspace   => {
+                    if loc != 0 {
+                        loc -= 1;
+                        buffer.remove(loc);
+                    }
+                }
+                _ => return ((buffer, loc), res)
             }
         }
-
-        (self.buffer.clone(), self.buffer.len(), Continue)
     }
 }

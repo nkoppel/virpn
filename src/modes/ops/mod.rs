@@ -51,17 +51,26 @@ impl Mode for Op_mode {
         "ops".to_string()
     }
 
-    fn eval_operators(&mut self, stack: &mut Stack, op: String) {
-        if let Some(f) = self.ops.get(&op) {
-            f(stack);
+    fn eval_operators(&mut self, ui: &mut Ui, ops: &mut String) {
+        let spc = ops.find(' ').unwrap_or(0);
+        let op = &ops[..spc];
+
+        if let Some(f) = self.ops.get(op) {
+            f(ui.get_stack());
         }
+
+        *ops = ops[spc + 1..].to_string();
     }
 
-    fn eval_bindings(&mut self, bind: Vec<Input>)
-        -> (String, Action)
+    fn eval_bindings(&self, mut ui: Ui_helper, _: HashMap<&str, &str>)
+        -> ModeRes<(String, usize)>
     {
-        (self.bindings.get(&bind).unwrap().to_string(), Exit)
-    }
+        let (bind, res) = ui.get_next_binding();
 
-    fn exit(&mut self) {}
+        let op = self.bindings.get(&bind).unwrap().to_string();
+
+        let len = op.len();
+
+        ((op, len), res)
+    }
 }

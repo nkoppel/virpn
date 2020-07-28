@@ -1,17 +1,8 @@
 use pancurses::{Input, Input::*};
 use crate::stack::Stack;
 use crate::modes::ops::helpers::*;
+use crate::io::bind_from_str;
 use std::collections::HashMap;
-
-pub fn bind_from_str(s: &str) -> Vec<Input> {
-    let mut out = Vec::new();
-
-    for c in s.chars() {
-        out.push(Character(c));
-    }
-
-    out
-}
 
 fn swap(stack: &mut Stack) -> Res<()> {
     if stack.len() < 2 {

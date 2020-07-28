@@ -5,6 +5,7 @@ use std::io::*;
 use std::result::Result;
 
 use std::collections::{HashMap, VecDeque};
+use std::rc::Rc;
 
 #[derive(Clone, Debug)]
 enum BindTree<T> {
@@ -14,9 +15,8 @@ enum BindTree<T> {
 
 use BindTree::*;
 
+#[derive(Clone, Debug)]
 pub struct Bindings<T> {
-    maxlen: usize,
-    escapes: Vec<Input>,
     tree: BindTree<T>,
     buf: Vec<Input>,
     out_buf: Vec<Input>
@@ -76,18 +76,14 @@ impl<T> BindTree<T> where T: Clone {
 impl<T> Bindings<T> where T: Clone {
     pub fn new() -> Self {
         Bindings {
-            maxlen: 0,
-            escapes: Vec::new(),
             tree: BindTree::new(),
             buf: Vec::new(),
             out_buf: Vec::new()
         }
     }
 
-    pub fn from_vec(v: Vec<(Vec<Input>, T)>, escapes: Vec<Input>) -> Self {
+    pub fn from_vec(v: Vec<(Vec<Input>, T)>) -> Self {
         let mut out = Bindings::new();
-
-        out.escapes = escapes;
 
         for (i, o) in v.into_iter() {
             out.tree.insert(i.iter(), o);
@@ -96,18 +92,17 @@ impl<T> Bindings<T> where T: Clone {
         out
     }
 
-    pub fn add(&mut self, i: Input) -> Option<Result<T, Input>> {
-        if self.escapes.contains(&i) {
-            self.buf.clear();
-            return Some(Err(i));
-        }
+    pub fn insert(&mut self, bind: Vec<Input>, output: T) {
+        self.tree.insert(bind.iter(), output);
+    }
 
+    pub fn add(&mut self, i: Input) -> Option<T> {
         self.buf.push(i.clone());
 
         match self.tree.get(self.buf.iter()) {
             (Some(out), _) => {
                 self.out_buf = std::mem::replace(&mut self.buf, Vec::new());
-                Some(Ok((out).clone()))
+                Some(out.clone())
             }
             (None, valid_prefix) => {
                 if !valid_prefix {
@@ -122,24 +117,40 @@ impl<T> Bindings<T> where T: Clone {
         }
     }
 
+    pub fn read_from_vec(&mut self, v: &Vec<Input>) -> (Vec<Input>, T) {
+        for c in v {
+            match self.add(*c) {
+                None => {}
+                Some(out) => return (self.out_buf.clone(), out),
+            }
+        }
+
+        panic!();
+    }
+
     pub fn read(&mut self, window: &Window)
-        -> Result<(Vec<Input>, T), Input>
+        -> (Vec<Input>, T)
     {
         window.keypad(true);
         pancurses::noecho();
 
-        let mut c;
-
         loop {
-            c = window.getch().unwrap();
-
-            match self.add(c) {
+            match self.add(window.getch().unwrap()) {
                 None => {}
-                Some(Ok(out)) => return Ok((self.out_buf.clone(), out)),
-                Some(Err(key)) => return Err(key)
+                Some(out) => return (self.out_buf.clone(), out),
             }
         }
     }
+}
+
+pub fn bind_from_str(s: &str) -> Vec<Input> {
+    let mut out = Vec::new();
+
+    for c in s.chars() {
+        out.push(Character(c));
+    }
+
+    out
 }
 
 use crate::stack::*;
