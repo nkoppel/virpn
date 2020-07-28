@@ -216,7 +216,12 @@ impl Ui_helper {
     pub fn call_mode_by_next_binding(&mut self, buf: Vec<Input>)
         -> ModeRes<(String, String, usize, bool)>
     {
-        let (bind, (esc, mode)) = self.bindings.read(&self.ui.window);
+        let (bind, (esc, mode)) =
+            if buf.is_empty() {
+                self.bindings.read(&self.ui.window)
+            } else {
+                self.bindings.read_from_vec(&buf)
+            };
 
         if esc {
             let tmp = (String::new(), String::new(), 0, true);

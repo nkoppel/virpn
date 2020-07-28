@@ -32,6 +32,8 @@ fn main() {
     let mut ui = Rc::new(ui);
 
     let mut inputs = Vec::new();
+    let mut op = String::new();
+    let mut run_on_mode_change = true;
 
     // ui.print_stack();
 
@@ -45,10 +47,26 @@ fn main() {
         let out = helper.call_mode_by_next_binding(inputs);
         inputs = Vec::new();
 
-        // println!("{:?}", out);
+        let ((_, tmp, _, _), _) = &out;
+
+        std::mem::drop(helper);
+
+        if !tmp.is_empty() {
+            op = tmp.to_string();
+            Rc::get_mut(&mut ui).unwrap().eval(op.clone());
+            ui.print_stack();
+        }
 
         match &out {
-            ((_, _, _, true), Some((_, b))) if b == &bind_from_str(" ") => {},
+            ((_, o, _, true), Some((_, b)))
+                if b == &bind_from_str(" ") || b == &bind_from_str("\n") => {
+                    if o.is_empty() {
+                        run_on_mode_change = false;
+                        Rc::get_mut(&mut ui).unwrap().eval(op.clone());
+                        ui.print_stack();
+                    }
+                }
+
             ((_, _, _, true), Some((_, b))) if b == &vec![KeyDC] => {
                 print_command(&ui.window, "", 0);
                 continue;
@@ -58,12 +76,6 @@ fn main() {
             _ => {}
         }
 
-        let ((_, op, _, _), _) = out;
-
-        std::mem::drop(helper);
-
-        Rc::get_mut(&mut ui).unwrap().eval(op);
-        ui.print_stack();
     }
 
     endwin();
