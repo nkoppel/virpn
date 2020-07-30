@@ -9,4 +9,4 @@ Usage guide coming soon!
 * Basic arithmetic
 * Stack operators (swap, pop, reverse, sum)
 * 52 variable registers (a-z and A-Z)
-* History (undo, redo, and repeat previous commands"
+* History (undo, redo, and repeat previous commands)
