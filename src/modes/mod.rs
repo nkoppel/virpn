@@ -13,6 +13,7 @@ pub use std::mem;
 pub mod number;
 pub mod ops;
 pub mod var;
+pub mod history;
 
 use crate::io::*;
 use std::borrow::BorrowMut;
@@ -109,8 +110,6 @@ impl Ui {
         while !ops.is_empty() {
             let mut mode = String::new();
 
-            // pancurses::endwin();
-            // println!("{:?}", self.operator_regexes);
             for (regex, m) in self.operator_regexes.iter() {
                 if regex.is_match(&ops) {
                     mode = m.to_string();
@@ -201,13 +200,15 @@ impl Ui_helper {
 
     pub fn call_mode_by_name(&mut self,
                             name: String,
-                            init: HashMap<&str, &str>)
+                            init: HashMap<&str, &str>,
+                            bind: Vec<Input>)
         -> Option<ModeRes<(String, usize)>>
     {
         match self.ui.get_mode(&name) {
             None => None,
             Some(m) => {
-                let below = self.build_below(name);
+                let mut below = self.build_below(name);
+                below.init_bind = bind;
                 Some(self.res_from_res(m.eval_bindings(below, init)))
             }
         }
@@ -217,10 +218,12 @@ impl Ui_helper {
         -> ModeRes<(String, String, usize, bool)>
     {
         let (bind, (esc, mode)) =
-            if buf.is_empty() {
-                self.bindings.read(&self.ui.window)
-            } else {
+            if !buf.is_empty() {
                 self.bindings.read_from_vec(&buf)
+            } else if !self.init_bind.is_empty() {
+                self.bindings.read_from_vec(&self.init_bind)
+            } else {
+                self.bindings.read(&self.ui.window)
             };
 
         if esc {

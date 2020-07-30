@@ -1,10 +1,12 @@
 mod io;
 mod stack;
 mod modes;
+mod interface;
 
 use crate::stack::*;
 use crate::io::*;
 use crate::modes::*;
+use crate::interface::*;
 
 use crate::modes::{
     number::Number_mode,
@@ -16,67 +18,5 @@ use pancurses::{initscr, endwin};
 use pancurses::Input::*;
 
 fn main() {
-    let window = initscr();
-    window.keypad(true);
-
-    // let tmp = Stack::from_nums((1..20).map(|n| n as f64).collect());
-    // let v = vec![List(tmp.into_vec())];
-
-    // let stack = Stack::from_vec(vec![List(v); 10]);
-
-    let ui = Ui::build(window, vec![
-        Box::new(Number_mode{}),
-        Box::new(Op_mode::new()),
-        Box::new(Var_mode::new()),
-    ]);
-    let mut ui = Rc::new(ui);
-
-    let mut inputs = Vec::new();
-    let mut op = String::new();
-    let mut run_on_mode_change = true;
-
-    // ui.print_stack();
-
-    loop {
-        let mut helper = ui.clone().build_helper();
-
-        helper.add_escape_binding(bind_from_str("Q"));
-        helper.add_escape_binding(bind_from_str(" "));
-        helper.add_escape_binding(vec![KeyDC]);
-
-        let out = helper.call_mode_by_next_binding(inputs);
-        inputs = Vec::new();
-
-        let ((_, tmp, _, _), _) = &out;
-
-        std::mem::drop(helper);
-
-        if !tmp.is_empty() {
-            op = tmp.to_string();
-            Rc::get_mut(&mut ui).unwrap().eval(op.clone());
-            ui.print_stack();
-        }
-
-        match &out {
-            ((_, o, _, true), Some((_, b)))
-                if b == &bind_from_str(" ") || b == &bind_from_str("\n") => {
-                    if o.is_empty() {
-                        run_on_mode_change = false;
-                        Rc::get_mut(&mut ui).unwrap().eval(op.clone());
-                        ui.print_stack();
-                    }
-                }
-
-            ((_, _, _, true), Some((_, b))) if b == &vec![KeyDC] => {
-                print_command(&ui.window, "", 0);
-                continue;
-            },
-            ((_, _, _, true), _) => break,
-            (_, Some((_, binds))) => inputs = binds.clone(),
-            _ => {}
-        }
-
-    }
-
-    endwin();
+    history_interface();
 }
