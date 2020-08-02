@@ -38,6 +38,10 @@ impl Stack {
         self.curr
     }
 
+    pub fn insert(&mut self, index: usize, i: Item) {
+        self.curr.insert(index, i);
+    }
+
     pub fn push(&mut self, i: Item) {
         self.curr.push(i);
     }

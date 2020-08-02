@@ -32,7 +32,7 @@ fn rotate(stack: &mut Stack) -> Res<()> {
     }
 
     let i = stack.pop().unwrap();
-    stack.insert(i, 0);
+    stack.insert(0, i);
     Ok(())
 }
 
@@ -83,10 +83,10 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("rev"   , vec!["isr"           ], basic(&|st| st.rev())),
     ]
         .into_iter()
-        .map(|(x, y, z)| (
-                x.to_string(),
-                y.into_iter().map(|x| bind_from_str(x)).collect(),
-                z
+        .map(|(name, binds, op)| (
+                name.to_string(),
+                binds.into_iter().map(|bind| bind_from_str(bind)).collect(),
+                op
             ))
         .collect()
 }

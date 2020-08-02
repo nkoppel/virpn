@@ -106,7 +106,7 @@ impl Ui {
         self.modes.remove(name)
     }
 
-    pub fn tokenize<'a>(&mut self, mut ops: &str) -> Vec<(String, String)> {
+    pub fn tokenize<'a>(&self, mut ops: &str) -> Vec<(String, String)> {
         let mut out = Vec::new();
         let mut ran = true;
 
