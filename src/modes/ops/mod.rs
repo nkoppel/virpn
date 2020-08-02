@@ -63,9 +63,7 @@ impl Mode for Op_mode {
         -> ModeRes<(String, usize)>
     {
         let (bind, res) = ui.get_next_binding();
-
         let op = self.bindings.get(&bind).unwrap().to_string();
-
         let len = op.len();
 
         ui.print_output(&op, len);

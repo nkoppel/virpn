@@ -26,6 +26,16 @@ fn duplicate(stack: &mut Stack) -> Res<()> {
     Ok(())
 }
 
+fn rotate(stack: &mut Stack) -> Res<()> {
+    if stack.is_empty() {
+        return Err("Too few arguments!".to_string());
+    }
+
+    let i = stack.pop().unwrap();
+    stack.insert(i, 0);
+    Ok(())
+}
+
 use std::f64::consts;
 use std::f64;
 
@@ -67,6 +77,7 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
 
         ("clear" , vec!["C", "cc", "isc"], basic(&|st| st.clear())),
         ("swap"  , vec!["isw"           ], Box::new(swap)),
+        ("rotate", vec!["iso"           ], Box::new(rotate)),
         ("dup"   , vec!["isd"           ], Box::new(duplicate)),
         ("pop"   , vec!["isp"           ], basic(&|st| {st.pop();})),
         ("rev"   , vec!["isr"           ], basic(&|st| st.rev())),

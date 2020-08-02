@@ -50,24 +50,22 @@ impl Mode for History_mode {
 
             self.undos.push((ops.to_string(), ui.get_stack().clone()));
             self.lines.push(ops.to_string());
-        } else if op == "undo" {
-            if self.index > 0 {
-                self.index -= 1;
 
-                let (line, stack) = &self.undos[self.index];
+        } else if op == "undo" && self.index > 0 {
+            self.index -= 1;
 
-                print_command(&ui.window, line, line.len());
-                *ui.get_stack() = stack.clone();
-            }
-        } else if op == "redo" {
-            if self.index < self.undos.len() {
-                self.index += 1;
+            let (line, stack) = &self.undos[self.index];
 
-                let (line, stack) = &self.undos[self.index];
+            print_command(&ui.window, line, line.len());
+            *ui.get_stack() = stack.clone();
 
-                print_command(&ui.window, line, line.len());
-                *ui.get_stack() = stack.clone();
-            }
+        } else if op == "redo" && self.index < self.undos.len() {
+            self.index += 1;
+
+            let (line, stack) = &self.undos[self.index];
+
+            print_command(&ui.window, line, line.len());
+            *ui.get_stack() = stack.clone();
         }
 
         ui.insert_mode(
