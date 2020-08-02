@@ -29,35 +29,28 @@ impl Mode for History_mode {
     }
 
     fn get_operator_regex(&self) -> Regex {
-        Regex::new(r"^history_add|^undo|^redo").unwrap()
+        Regex::new(r"^history_add.*|^undo|^redo").unwrap()
     }
 
     fn get_name(&self) -> String {
         "history".to_string()
     }
 
-    fn eval_operators(&mut self, ui: &mut Ui, ops: &mut String) {
+    fn eval_operators(&mut self, ui: &mut Ui, mut ops: &str) {
         let spc = ops.find(' ').unwrap_or(ops.len());
         let op = &ops[0..spc];
 
         if op == "history_add" {
-            *ops = ops[(spc + 1).min(ops.len())..].to_string();
-
             self.index += 1;
             self.undos.resize_with(self.index, ||(String::new(), Stack::new()));
 
-            ui.eval(ops.clone());
+            ops = &ops[spc + 1..];
 
-            self.undos.push((ops.clone(), ui.get_stack().clone()));
-            self.lines.push(ops.clone());
+            ui.eval(ops.to_string());
 
-            ops.clear();
-
-            if self.index < self.undos.len() - 1 {
-            }
+            self.undos.push((ops.to_string(), ui.get_stack().clone()));
+            self.lines.push(ops.to_string());
         } else if op == "undo" {
-            *ops = ops[(spc + 1).min(ops.len())..].to_string();
-
             if self.index > 0 {
                 self.index -= 1;
 
@@ -67,8 +60,6 @@ impl Mode for History_mode {
                 *ui.get_stack() = stack.clone();
             }
         } else if op == "redo" {
-            *ops = ops[(spc + 1).min(ops.len())..].to_string();
-
             if self.index < self.undos.len() {
                 self.index += 1;
 

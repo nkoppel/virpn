@@ -51,15 +51,10 @@ impl Mode for Op_mode {
         "ops".to_string()
     }
 
-    fn eval_operators(&mut self, ui: &mut Ui, ops: &mut String) {
-        let spc = ops.find(' ').unwrap_or(ops.len());
-        let op = &ops[..spc];
-
+    fn eval_operators(&mut self, ui: &mut Ui, op: &str) {
         if let Some(f) = self.ops.get(op) {
             f(ui.get_stack());
         }
-
-        *ops = ops[(spc + 1).min(ops.len())..].to_string();
 
         ui.insert_mode("ops".to_string(), Box::new(Op_mode::new()));
     }

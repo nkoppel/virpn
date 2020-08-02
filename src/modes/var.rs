@@ -34,11 +34,9 @@ impl Mode for Var_mode {
         "var".to_string()
     }
 
-    fn eval_operators(&mut self, ui: &mut Ui, ops: &mut String) {
-        let mut words = ops.split(" ");
-
-        let word1 = if let Some(w) = words.next() {w} else {return};
-        let word2 = if let Some(w) = words.next() {w} else {return};
+    fn eval_operators(&mut self, ui: &mut Ui, op: &str) {
+        let word1 = &op[..3];
+        let word2 = &op[4..];
 
         let stack = ui.get_stack();
 
@@ -49,8 +47,6 @@ impl Mode for Var_mode {
                 self.values[index_from_str(word2)] = i;
             }
         }
-
-        *ops = words.collect::<Vec<_>>().join(" ");
 
         ui.insert_mode(
             self.get_name(),

@@ -30,7 +30,7 @@ pub trait Mode {
     fn eval_bindings(&self, ui: Ui_helper, init: HashMap<&str, &str>)
         -> ModeRes<(String, usize)>;
 
-    fn eval_operators(&mut self, ui: &mut Ui, op: &mut String);
+    fn eval_operators(&mut self, ui: &mut Ui, op: &str);
 }
 
 pub type ModeRes<T> = (T, Option<(bool, Vec<Input>)>);
@@ -106,19 +106,35 @@ impl Ui {
         self.modes.remove(name)
     }
 
-    pub fn eval(&mut self, mut ops: String) {
-        while !ops.is_empty() {
-            let mut mode = String::new();
+    pub fn tokenize<'a>(&mut self, mut ops: &str) -> Vec<(String, String)> {
+        let mut out = Vec::new();
+        let mut ran = true;
+
+        while !ops.is_empty() && ran {
+            ran = false;
 
             for (regex, m) in self.operator_regexes.iter() {
-                if regex.is_match(&ops) {
-                    mode = m.to_string();
+                if let Some(mat) = regex.find(&ops) {
+                    let end = mat.end();
+
+                    out.push( (m.to_string(), ops[..end].to_string()) );
+                    ops = &ops[(end + 2).min(ops.len())..];
+
+                    ran = true;
                     break;
                 }
             }
+        }
 
+        out
+    }
+
+    pub fn eval(&mut self, exp: String) {
+        let mut ops = self.tokenize(&exp);
+
+        for (mode, op) in ops {
             if let Some(mut mode) = self.remove_mode(&mode) {
-                mode.eval_operators(self, &mut ops);
+                mode.eval_operators(self, &op);
             } else {
                 break;
             }

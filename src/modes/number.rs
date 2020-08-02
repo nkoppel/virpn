@@ -29,16 +29,11 @@ impl Mode for Number_mode {
         "number".to_string()
     }
 
-    fn eval_operators(&mut self, ui: &mut Ui, ops: &mut String) {
-        let spc = ops.find(' ').unwrap_or(ops.len());
-        let op = &ops[0..spc];
-
+    fn eval_operators(&mut self, ui: &mut Ui, op: &str) {
         match op.parse::<f64>() {
             Ok(f) => ui.get_stack().push(Num(f)),
             Err(_) => ()
         }
-
-        *ops = ops[(spc + 1).min(ops.len())..].to_string();
 
         ui.insert_mode("number".to_string(), Box::new(Number_mode{}));
     }
