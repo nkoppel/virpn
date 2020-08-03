@@ -112,25 +112,33 @@ impl Stack {
             return Num(f(input));
         }
 
+        let mut iters: Vec<_> =
+            self.curr.into_iter().map(|i| {
+                let tmp: Box<dyn Iterator<Item = Item>> =
+                    match i {
+                        Num(_) | Func(_) => Box::new(std::iter::repeat(i)),
+                        List(l) => Box::new(l.into_iter())
+                    };
+
+                tmp
+            }).collect();
+
         let mut has_fn = false;
         let mut rec_stack;
-        let mut result = Stack::new();
+        let mut result = Vec::new();
 
         loop {
             rec_stack = Stack::new();
-            for i in self.curr.iter_mut() {
-                match i {
-                    Func(_) => has_fn = true,
-                    Num(_) => rec_stack.push(i.clone()),
-                    List(s) => {
-                        match s.pop() {
-                            Some(x) => rec_stack.push(x),
-                            None => {
-                                result.rev();
-                                return List(result.into_vec());
-                            }
-                        }
+
+            for i in iters.iter_mut() {
+                let tmp = i.next();
+                match tmp {
+                    Some(Func(_)) => {
+                        has_fn = true;
+                        rec_stack.push(tmp.unwrap());
                     }
+                    Some(item) => rec_stack.push(item),
+                    None => return List(result)
                 }
             }
 
