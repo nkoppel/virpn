@@ -106,7 +106,7 @@ impl Ui {
         self.modes.remove(name)
     }
 
-    pub fn tokenize<'a>(&self, mut ops: &str) -> Vec<(String, String)> {
+    pub fn tokenize(&self, mut ops: &str) -> Vec<(String, String)> {
         let mut out = Vec::new();
         let mut ran = true;
 
@@ -237,7 +237,9 @@ impl Ui_helper {
             if !buf.is_empty() {
                 self.bindings.read_from_vec(&buf)
             } else if !self.init_bind.is_empty() {
-                self.bindings.read_from_vec(&self.init_bind)
+                self.bindings.read_from_vec(
+                    &mem::replace(&mut self.init_bind, Vec::new())
+                )
             } else {
                 self.bindings.read(&self.ui.window)
             };
@@ -264,6 +266,10 @@ impl Ui_helper {
         } else {
             ((mode, s, loc, false), res)
         }
+    }
+
+    pub fn tokenize(&self, ops: &str) -> Vec<(String, String)> {
+        self.ui.tokenize(ops)
     }
 
     pub fn print_output(&self, output: &str, loc: usize) {

@@ -123,11 +123,12 @@ impl Stack {
                 tmp
             }).collect();
 
-        let mut has_fn = false;
+        let mut has_fn;
         let mut rec_stack;
         let mut result = Vec::new();
 
         loop {
+            has_fn = false;
             rec_stack = Stack::new();
 
             for i in iters.iter_mut() {
