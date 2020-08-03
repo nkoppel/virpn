@@ -49,6 +49,21 @@ pub fn fold_op(f: &'static impl Fn(f64, f64) -> f64, start: f64) -> Op {
     })
 }
 
+pub fn list_fold_op(f: &'static impl Fn(f64, f64) -> f64, start: f64) -> Op {
+    Box::new(move |stack: &mut Stack| {
+        match stack.pop() {
+            Some(List(s)) => {
+                let n = Stack::apply_fold_vec(&s, f, start);
+
+                stack.push(Num(n));
+            },
+            Some(i) => stack.push(i),
+            None => {}
+        }
+        Ok(())
+    })
+}
+
 pub fn constant(x: f64) -> Op {
     Box::new(move |stack: &mut Stack| {
         stack.push(Num(x));
