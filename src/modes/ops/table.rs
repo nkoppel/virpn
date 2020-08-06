@@ -3,41 +3,38 @@ use crate::modes::*;
 use crate::modes::ops::helpers::*;
 use crate::io::bind_from_str;
 
-fn swap(stack: &mut Stack) -> Res<()> {
+fn swap(stack: &mut Stack) {
     if stack.len() < 2 {
-        return Err("Too few arguments!".to_string());
+        return;
     }
     let i1 = stack.pop().unwrap();
     let i2 = stack.pop().unwrap();
     stack.push(i1);
     stack.push(i2);
-    Ok(())
 }
 
-fn duplicate(stack: &mut Stack) -> Res<()> {
+fn duplicate(stack: &mut Stack) {
     if stack.is_empty() {
-        return Err("Too few arguments!".to_string());
+        return;
     }
 
     let i = stack.pop().unwrap();
     stack.push(i.clone());
     stack.push(i);
-    Ok(())
 }
 
-fn rotate(stack: &mut Stack) -> Res<()> {
+fn rotate(stack: &mut Stack) {
     if stack.is_empty() {
-        return Err("Too few arguments!".to_string());
+        return;
     }
 
     let i = stack.pop().unwrap();
     stack.insert(0, i);
-    Ok(())
 }
 
-fn range(stack: &mut Stack) -> Res<()> {
+fn range(stack: &mut Stack) {
     if stack.len() < 2 {
-        return Err("Too few arguments!".to_string());
+        return;
     }
 
     match (stack.pop().unwrap(), stack.pop().unwrap()) {
@@ -63,8 +60,6 @@ fn range(stack: &mut Stack) -> Res<()> {
             stack.push(i2);
         }
     }
-
-    Ok(())
 }
 
 use std::f64::consts;
@@ -107,9 +102,9 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("msum"  , vec!["ism"           ], fold_op(&|x, y| x * y, 1.)),
 
         ("clear" , vec!["C", "cc", "isc"], basic(&|st| st.clear())),
-        ("swap"  , vec!["isw"           ], Box::new(swap)),
-        ("rotate", vec!["iso"           ], Box::new(rotate)),
-        ("dup"   , vec!["isd"           ], Box::new(duplicate)),
+        ("swap"  , vec!["isw"           ], basic(&swap)),
+        ("rotate", vec!["iso"           ], basic(&rotate)),
+        ("dup"   , vec!["isd"           ], basic(&duplicate)),
         ("pop"   , vec!["isp"           ], basic(&|st| {st.pop();})),
         ("rev"   , vec!["isr"           ], basic(&|st| st.rev())),
 
@@ -117,7 +112,7 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("sum_list" , vec!["ilu"], list_fold_op(&|x, y| x + y, 0.)),
         ("msum_list", vec!["ilm"], list_fold_op(&|x, y| x * y, 1.)),
 
-        ("range", vec!["ila"], Box::new(range)),
+        ("range", vec!["ila"], basic(&range)),
 
         ("down"     , vec!["ilj", "J"], basic(&|st| st.down())),
         ("up"       , vec!["ilk", "K"], basic(&|st| st.up())),
