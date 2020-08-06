@@ -1,5 +1,6 @@
 use crate::modes::*;
 
+#[allow(non_camel_case_types)]
 #[derive(Clone, Debug)]
 pub struct Number_mode {}
 

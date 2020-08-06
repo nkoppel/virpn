@@ -1,5 +1,3 @@
-use crate::stack::*;
-use crate::io::*;
 use crate::modes::*;
 
 use crate::modes::{
@@ -11,7 +9,6 @@ use crate::modes::{
 };
 
 use pancurses::{initscr, endwin};
-use pancurses::Input::*;
 
 fn new_ui(window: Window) -> Ui {
     Ui::build(window, vec![
@@ -23,6 +20,7 @@ fn new_ui(window: Window) -> Ui {
     ])
 }
 
+#[allow(dead_code)]
 pub fn interface() {
     let window = initscr();
     window.keypad(true);
@@ -82,9 +80,7 @@ pub fn history_interface() {
     window.keypad(true);
 
     let mut ui = Rc::new(new_ui(window));
-
     let mut inputs = Vec::new();
-    let mut op = String::new();
 
     print_command(&ui.window, "", 0);
 
@@ -94,7 +90,7 @@ pub fn history_interface() {
         helper.add_escape_binding(bind_from_str("Q"));
         helper.add_escape_binding(vec![KeyDC]);
 
-        let ((op, loc), res) =
+        let ((op, _), res) =
             helper.call_mode_by_name(
                 "history".to_string(),
                 HashMap::new(),

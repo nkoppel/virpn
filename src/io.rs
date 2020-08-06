@@ -1,11 +1,6 @@
 use pancurses::{Input, Input::*, Window};
 
-use std::io;
-use std::io::*;
-use std::result::Result;
-
-use std::collections::{HashMap, VecDeque};
-use std::rc::Rc;
+use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
 enum BindTree<T> {

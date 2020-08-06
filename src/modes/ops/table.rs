@@ -45,7 +45,7 @@ fn range(stack: &mut Stack) {
                 if n1 > n2 {
                     Box::new((n2..n1+1).rev())
                 } else {
-                    Box::new((n1..n2+1))
+                    Box::new(n1..n2+1)
                 };
 
             let mut list = Vec::new();

@@ -1,5 +1,6 @@
 use crate::modes::*;
 
+#[allow(non_camel_case_types)]
 #[derive(Clone, Debug)]
 pub struct History_mode {
     index: usize,
@@ -85,9 +86,7 @@ impl Mode for History_mode {
 
         let out = ui.call_mode_by_next_binding(Vec::new());
 
-        let ((_, op, loc, _), res) = out;
-
-        // println!("(({:?}, {:?}), {:?})", op, loc, res);
+        let ((_, op, _, _), res) = out;
 
         if let Some(b) = res.clone() {
             if b == bind_from_str(" ") || b == bind_from_str("\n") {
@@ -102,7 +101,7 @@ impl Mode for History_mode {
                 }
             } else if b == vec![KeyUp] && self.lines.len() > 1 {
                 let mut key;
-                let mut line = String::new();
+                let mut line;
                 let mut loc = self.lines.len() - 2;
 
                 loop {

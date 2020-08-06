@@ -7,9 +7,8 @@ mod helpers;
 use crate::modes::ops::helpers::Op;
 use crate::modes::ops::table::gen_ops;
 
+#[allow(non_camel_case_types)]
 pub struct Op_mode{
-    radian: bool,
-    matrix: bool,
     bindings: HashMap<Vec<Input>, String>,
     ops: HashMap<String, Op>,
 }
@@ -27,8 +26,6 @@ impl Op_mode {
         }
 
         Op_mode {
-            radian: true,
-            matrix: false,
             bindings,
             ops
         }
@@ -41,7 +38,7 @@ impl Mode for Op_mode {
     }
 
     fn get_operator_regex(&self) -> Regex {
-        let mut names: Vec<String> =
+        let names: Vec<String> =
             self.bindings.values().map(|x| escape(&x[..])).collect();
 
         Regex::new(&format!("^{}", names.join("|^"))).unwrap()

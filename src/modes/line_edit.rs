@@ -1,5 +1,6 @@
 use crate::modes::*;
 
+#[allow(non_camel_case_types)]
 pub struct Line_edit_mode {} 
 
 fn find_matching_paren(s: &str) -> Option<usize> {
@@ -109,7 +110,7 @@ impl Mode for Line_edit_mode {
         let mut idx = strs.len();
         let mut inputs = Vec::new();
 
-        let (bind, res) = ui.get_next_binding();
+        let (bind, _) = ui.get_next_binding();
 
         if strs.is_empty() {
             if bind == bind_from_str("[") || bind == bind_from_str("ili") {
@@ -201,7 +202,5 @@ impl Mode for Line_edit_mode {
                 _ => {}
             }
         }
-
-        ((String::new(), 0), None)
     }
 }

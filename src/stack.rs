@@ -13,6 +13,7 @@ pub struct Stack {
 
 pub use Item::*;
 
+#[allow(dead_code)]
 impl Stack {
     pub fn new() -> Self {
         Stack {
@@ -89,7 +90,7 @@ impl Stack {
         self.curr.len()
     }
 
-    pub fn apply_map(mut self, f: &impl Fn(Vec<f64>) -> f64) -> Item {
+    pub fn apply_map(self, f: &impl Fn(Vec<f64>) -> f64) -> Item {
         let mut only_num = true;
 
         for x in self.curr.iter() {

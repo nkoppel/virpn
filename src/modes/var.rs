@@ -1,19 +1,15 @@
 use crate::modes::*;
 
-const NUM_VARS: usize = 52;
 const VAR_NAMES: &str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+#[allow(non_camel_case_types)]
 pub struct Var_mode {
-    optype: String,
     values: Vec<Item>
 }
 
 impl Var_mode {
     pub fn new() -> Self {
-        Var_mode {
-            optype: String::new(),
-            values: vec![Num(0.); 52]
-        }
+        Var_mode {values: vec![Num(0.); 52]}
     }
 }
 

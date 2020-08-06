@@ -4,6 +4,7 @@ pub use std::cell::Cell;
 
 pub use crate::stack::Stack;
 pub use crate::stack::{Item, Item::*};
+pub use crate::io::*;
 
 pub use pancurses::{Input, Input::*, Window};
 pub use regex::Regex;
@@ -15,9 +16,6 @@ pub mod ops;
 pub mod var;
 pub mod history;
 pub mod line_edit;
-
-use crate::io::*;
-use std::borrow::BorrowMut;
 
 pub trait Mode {
     // set of bindings used to enter this mode
@@ -44,6 +42,7 @@ pub struct Ui {
     pub window: Window
 }
 
+#[allow(non_camel_case_types)]
 pub struct Ui_helper {
     ui: Rc<Ui>,
     init_bind: Vec<Input>,
@@ -131,8 +130,7 @@ impl Ui {
     }
 
     pub fn eval(&mut self, exp: String) {
-        let mut ops = self.tokenize(&exp);
-        // println!("{:?}", ops);
+        let ops = self.tokenize(&exp);
 
         for (mode, op) in ops {
             if let Some(mut mode) = self.remove_mode(&mode) {
@@ -185,7 +183,7 @@ impl Ui_helper {
     }
 
     pub fn get_next_binding(&mut self) -> ModeRes<Vec<Input>> {
-        let (bind, mode) =
+        let (bind, _) =
             if !self.init_bind.is_empty() {
                 self.bindings.read_from_vec(
                     &mem::replace(&mut self.init_bind, Vec::new())
@@ -246,7 +244,6 @@ impl Ui_helper {
         let mut below = self.build_below(mode.clone());
 
         below.init_bind = bind;
-        // println!("{:?}", below.init_bind);
 
         let ((s, loc), res) = m.eval_bindings(below, HashMap::new());
 
