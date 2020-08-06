@@ -55,7 +55,7 @@ pub fn interface() {
         }
 
         match &out {
-            ((_, o, _, true), Some((_, b)))
+            ((_, o, _, true), Some(b))
                 if b == &bind_from_str(" ") || b == &bind_from_str("\n") => {
                     if o.is_empty() {
                         Rc::get_mut(&mut ui).unwrap().eval(op.clone());
@@ -63,12 +63,12 @@ pub fn interface() {
                     }
                 }
 
-            ((_, _, _, true), Some((_, b))) if b == &vec![KeyDC] => {
+            ((_, _, _, true), Some(b)) if b == &vec![KeyDC] => {
                 print_command(&ui.window, "", 0);
                 continue;
             },
             ((_, _, _, true), _) => break,
-            (_, Some((_, binds))) => inputs = binds.clone(),
+            (_, Some(binds)) => inputs = binds.clone(),
             _ => {}
         }
 
@@ -104,7 +104,7 @@ pub fn history_interface() {
         inputs = Vec::new();
         mem::drop(helper);
 
-        if let Some((_, b)) = res {
+        if let Some(b) = res {
             if b == bind_from_str("Q") {
                 break;
             } else if b == vec![KeyDC] {

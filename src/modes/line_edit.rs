@@ -144,7 +144,7 @@ impl Mode for Line_edit_mode {
             }
 
             match out {
-                ((.., true), Some((_, b))) => {
+                ((.., true), Some(b)) => {
                     if b == vec![KeyLeft] {
                         if idx > 0 {
                             idx -= 1;
@@ -193,11 +193,11 @@ impl Mode for Line_edit_mode {
                         strs.insert(idx, "]".to_string());
                     } else
                     if b != bind_from_str(" ") && b != bind_from_str("I") {
-                        return ((String::new(), 0), Some((false,  b)));
+                        return ((String::new(), 0), Some(b));
                     }
                 }
                 ((.., true), res) => return ((String::new(), 0), res),
-                (_, Some((_, binds))) => inputs = binds.clone(),
+                (_, Some(binds)) => inputs = binds.clone(),
                 _ => {}
             }
         }

@@ -34,7 +34,7 @@ pub trait Mode {
     fn eval_operators(&mut self, ui: &mut Ui, op: &str);
 }
 
-pub type ModeRes<T> = (T, Option<(bool, Vec<Input>)>);
+pub type ModeRes<T> = (T, Option<Vec<Input>>);
 
 pub struct Ui {
     operator_regexes: Vec<(Regex, String)>,
@@ -184,17 +184,6 @@ impl Ui_helper {
         (self.bindings.read_from_vec(&bind).1).1 == self.mode
     }
 
-    fn res_from_bind<T>(&mut self, t: T, bind: Vec<Input>) -> ModeRes<T> {
-        (t, Some((self.is_my_binding(&bind), bind)))
-    }
-
-    fn res_from_res<T>(&mut self, res: ModeRes<T>) -> ModeRes<T> {
-        match res {
-            (t, None) => (t, None),
-            (t, Some((_, bind))) => self.res_from_bind(t, bind)
-        }
-    }
-
     pub fn get_next_binding(&mut self) -> ModeRes<Vec<Input>> {
         let (bind, mode) =
             if !self.init_bind.is_empty() {
@@ -208,7 +197,7 @@ impl Ui_helper {
         if self.is_my_binding(&bind) {
             (bind, None)
         } else {
-            self.res_from_bind(bind.clone(), bind)
+            (bind.clone(), Some(bind))
         }
     }
 
@@ -227,7 +216,7 @@ impl Ui_helper {
             Some(m) => {
                 let mut below = self.build_below(name);
                 below.init_bind = bind;
-                Some(self.res_from_res(m.eval_bindings(below, init)))
+                Some(m.eval_bindings(below, init))
             }
         }
     }
@@ -249,7 +238,7 @@ impl Ui_helper {
         if esc {
             let tmp = (String::new(), String::new(), 0, true);
 
-            return self.res_from_bind(tmp, bind);
+            return (tmp, Some(bind));
         }
 
         let m = self.ui.get_mode(&mode).unwrap();
@@ -259,10 +248,9 @@ impl Ui_helper {
         below.init_bind = bind;
         // println!("{:?}", below.init_bind);
 
-        let ((s, loc), res) =
-            self.res_from_res(m.eval_bindings(below, HashMap::new()));
+        let ((s, loc), res) = m.eval_bindings(below, HashMap::new());
 
-        if let Some((_, bind)) = res.clone() {
+        if let Some(bind) = res.clone() {
             let (_, (b, _)) = self.bindings.read_from_vec(&bind);
 
             ((mode, s, loc, b), res)

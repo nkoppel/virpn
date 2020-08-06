@@ -17,7 +17,7 @@ impl History_mode {
     }
 }
 
-fn ret_history_add(s: &str, res: Option<(bool, Vec<Input>)>)
+fn ret_history_add(s: &str, res: Option<Vec<Input>>)
     -> ModeRes<(String, usize)>
 {
     return ((format!("history_add {}", s), s.len() + 11), res);
@@ -89,7 +89,7 @@ impl Mode for History_mode {
 
         // println!("(({:?}, {:?}), {:?})", op, loc, res);
 
-        if let Some((_, b)) = res.clone() {
+        if let Some(b) = res.clone() {
             if b == bind_from_str(" ") || b == bind_from_str("\n") {
                 if op.is_empty() {
                     let s =
