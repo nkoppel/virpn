@@ -72,7 +72,6 @@ impl Mode for Var_mode {
             ui.add_escape_binding(vec![Character(c)]);
         }
 
-
         tmp = ui.get_next_binding();
 
         if let (_, Some(_)) = tmp {

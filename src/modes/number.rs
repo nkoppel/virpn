@@ -22,7 +22,7 @@ impl Mode for Number_mode {
     }
 
     fn get_operator_regex(&self) -> Regex {
-        Regex::new(r"^-?\d*.?\d+").unwrap()
+        Regex::new(r"^-?\d*\.?\d+").unwrap()
     }
 
     fn get_name(&self) -> String {

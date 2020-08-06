@@ -14,6 +14,7 @@ pub mod number;
 pub mod ops;
 pub mod var;
 pub mod history;
+pub mod line_edit;
 
 use crate::io::*;
 use std::borrow::BorrowMut;
@@ -118,7 +119,7 @@ impl Ui {
                     let end = mat.end();
 
                     out.push( (m.to_string(), ops[..end].to_string()) );
-                    ops = &ops[(end + 2).min(ops.len())..];
+                    ops = &ops[(end + 1).min(ops.len())..];
 
                     ran = true;
                     break;
@@ -131,6 +132,7 @@ impl Ui {
 
     pub fn eval(&mut self, exp: String) {
         let mut ops = self.tokenize(&exp);
+        // println!("{:?}", ops);
 
         for (mode, op) in ops {
             if let Some(mut mode) = self.remove_mode(&mode) {
@@ -255,6 +257,7 @@ impl Ui_helper {
         let mut below = self.build_below(mode.clone());
 
         below.init_bind = bind;
+        // println!("{:?}", below.init_bind);
 
         let ((s, loc), res) =
             self.res_from_res(m.eval_bindings(below, HashMap::new()));

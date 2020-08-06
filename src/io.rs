@@ -30,6 +30,10 @@ impl<T> BindTree<T> where T: Clone {
     pub fn insert<'a, I>(&mut self, mut key: I, val: T)
         where I: Iterator<Item=&'a Input>
     {
+        if let Leaf(_) = self {
+            *self = Branch(HashMap::new());
+        }
+
         if let Branch(map) = self {
             if let Some(input) = key.next() {
                 match map.get_mut(&input) {
