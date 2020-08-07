@@ -38,8 +38,11 @@ impl Mode for Op_mode {
     }
 
     fn get_operator_regex(&self) -> Regex {
-        let names: Vec<String> =
-            self.bindings.values().map(|x| escape(&x[..])).collect();
+        let mut names: Vec<String> =
+            self.ops.keys().map(|x| escape(&x[..])).collect();
+
+        // sort in order of descending length
+        names.sort_by(|x, y| y.len().cmp(&x.len()));
 
         Regex::new(&format!("^{}", names.join("|^"))).unwrap()
     }
