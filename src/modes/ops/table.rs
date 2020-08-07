@@ -76,7 +76,9 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
 
         ("square", vec!["oq"            ], op_1(&|x| x * x)),
         ("sqrt"  , vec!["or"            ], op_1(&|x| x.sqrt())),
-        ("negate", vec!["on"            ], op_1(&|x| -x)),
+        ("cbrt"  , vec!["ob"            ], op_1(&|x| x.cbrt())),
+        ("nth_rt", vec!["on"            ], op_2(&|x, y| x.powf(1. / y))),
+        ("negate", vec!["oe"            ], op_1(&|x| -x)),
 
         ("ln"    , vec!["oge"           ], op_1(&|x| x.ln())),
         ("log10" , vec!["oga", "og1"    ], op_1(&|x| x.log10())),
