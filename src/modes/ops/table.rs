@@ -100,15 +100,15 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("inf"   , vec!["cip"           ], constant(f64::INFINITY)),
         ("-inf"  , vec!["cin"           ], constant(f64::NEG_INFINITY)),
 
-        ("sum"   , vec!["isu"           ], fold_op(&|x, y| x + y, 0.)),
-        ("msum"  , vec!["ism"           ], fold_op(&|x, y| x * y, 1.)),
+        ("sum"   , vec!["isu", "ou"     ], fold_op(&|x, y| x + y, 0.)),
+        ("msum"  , vec!["ism", "om"     ], fold_op(&|x, y| x * y, 1.)),
 
         ("clear" , vec!["C", "cc", "isc"], basic(&|st| st.clear())),
-        ("swap"  , vec!["isw"           ], basic(&swap)),
-        ("rotate", vec!["iso"           ], basic(&rotate)),
-        ("dup"   , vec!["isd"           ], basic(&duplicate)),
-        ("pop"   , vec!["isp"           ], basic(&|st| {st.pop();})),
-        ("rev"   , vec!["isr"           ], basic(&|st| st.rev())),
+        ("swap"  , vec!["ow"            ], basic(&swap)),
+        ("rotate", vec!["oo"            ], basic(&rotate)),
+        ("dup"   , vec!["od"            ], basic(&duplicate)),
+        ("pop"   , vec!["op"            ], basic(&|st| {st.pop();})),
+        ("rev"   , vec!["ov"            ], basic(&|st| st.rev())),
 
         ("new_list" , vec!["iln"], basic(&|st| st.push(List(Vec::new())))),
         ("sum_list" , vec!["ilu"], list_fold_op(&|x, y| x + y, 0.)),
@@ -116,8 +116,8 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
 
         ("range", vec!["ila"], basic(&range)),
 
-        ("down"     , vec!["ilj", "J"], basic(&|st| st.down())),
-        ("up"       , vec!["ilk", "K"], basic(&|st| st.up())),
+        ("down"     , vec!["J", "oj"], basic(&|st| st.down())),
+        ("up"       , vec!["K", "ok"], basic(&|st| st.up())),
     ]
         .into_iter()
         .map(|(name, binds, op)| (

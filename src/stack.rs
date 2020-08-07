@@ -170,31 +170,40 @@ impl Stack {
         Stack::apply_fold_vec(&self.curr, f, start)
     }
 
-    pub fn to_string(&self, term_width: usize) -> String {
+    pub fn to_string(&self, width: usize, height: usize) -> String {
         let strs: Vec<String> =
-            self.curr.iter() .map(|x| x.to_string(0, term_width)).collect();
+            self.curr.iter() .map(|x| x.to_string(0, width, height)).collect();
 
         strs.join("\n")
     }
 }
 
 impl Item {
-    pub fn to_string(&self, indent: usize, term_width: usize) -> String {
+    pub fn to_string(&self, indent: usize, width: usize, height: usize)
+        -> String
+    {
         match self {
             List(s) => {
                 let mut len = 2;
                 let mut strs = Vec::new();
 
-                for i in s.iter() {
-                    let tmp = i.to_string(indent + 2, term_width);
+                for i in s.iter().rev() {
+                    let tmp = i.to_string(indent + 2, width, height);
                     len += tmp.len() + 1;
                     strs.push(tmp);
+
+                    if len + indent > width && strs.len() > height {
+                        break;
+                    }
                 }
+
+                strs = strs.into_iter().rev().collect();
 
                 let base_indent = " ".repeat(indent);
 
-                if len + indent > term_width {
-                    format!("[\n{0}  {1}\n{0}]", base_indent, strs.join(&format!("\n{}  ", base_indent)))
+                if len + indent > width {
+                    format!("[\n{0}  {1}\n{0}]", base_indent, strs.join(&format!("\n{}  ", base_indent))
+                    )
                 } else {
                     format!("[{}]", strs.join(" "))
                 }

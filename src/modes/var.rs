@@ -19,7 +19,7 @@ fn index_from_str(s: &str) -> usize {
 
 impl Mode for Var_mode {
     fn get_bindings(&self) -> Vec<Vec<Input>> {
-        vec![vec![Character('z')], vec![Character('x')]]
+        vec![vec![Character('y')], vec![Character('p')]]
     }
 
     fn get_operator_regex(&self) -> Regex {
@@ -59,7 +59,7 @@ impl Mode for Var_mode {
             return ((String::new(), 0), tmp.1);
         }
 
-        let setting = tmp.0 == vec![Character('z')];
+        let setting = tmp.0 == vec![Character('y')];
         let mut op = if setting {"set "} else {"get "}.to_string();
 
         ui.print_output(&op, 4);
