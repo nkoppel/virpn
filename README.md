@@ -4,6 +4,14 @@ The Vi-Inspired Reverse Polish Notation calculator.
 
 A calculator designed for efficiency inspired by [vim](https://www.vim.org/), [vim-vertigo](https://github.com/prendradjaja/vim-vertigo), and hp rpn calculators.
 
+## Features
+
+- Rpn calculations on an infinite stack
+- [Vertigo-like](https://github.com/prendradjaja/vim-vertigo) number input
+- Lists
+- 52 variables
+- Undo and redo
+
 ## Usage
 
 ### Operators
@@ -29,17 +37,24 @@ Line edit mode allows you to chain operators together and define lists without c
     '<delete>' or '<esc>'  = clear input line
     'Q'                    = quit
 
-    "asdfghjkl;"           = insert digit "1234567890", respectively
-    'm' or '.'             = insert decimal point
-    'n'                    = insert negative number
+### Numbers
 
-    'q' or '+'             = add
-    'w' or '-'             = subtract
-    'e' or '/'             = divide
-    'r' or '*'             = multiply
-    't' or '^'             = to the power of
+    "asdfghjkl;" = insert digit "1234567890", respectively
+    'm' or '.'   = insert decimal point
+    'n'          = insert negative number
 
 Note: Numbers will be pushed onto the stack when entering any operator.
+
+### Basic Operators
+
+    'q' or '+'       = add
+    'w' or '-'       = subtract
+    'e' or '/'       = divide
+    'r' or '*'       = multiply
+    't' or '^'       = to the power of
+    'D', 'E', or '%' = modulus
+
+Note: The locations of the letters for addition, subtraction, and division are based off of the keys below them.
 
 ### Stack Manipulation
 
@@ -84,6 +99,7 @@ Note: Numbers will be pushed onto the stack when entering any operator.
 
 
 ### History
+
     '<up>' / '<down>' = browse previously entered lines
     '<enter>'         = run viewed line
 
