@@ -202,8 +202,8 @@ impl Item {
                 let base_indent = " ".repeat(indent);
 
                 if len + indent > width {
-                    format!("[\n{0}  {1}\n{0}]", base_indent, strs.join(&format!("\n{}  ", base_indent))
-                    )
+                    format!("[\n{0}  {1}\n{0}]", base_indent,
+                        strs.join(&format!("\n{}  ", base_indent)))
                 } else {
                     format!("[{}]", strs.join(" "))
                 }

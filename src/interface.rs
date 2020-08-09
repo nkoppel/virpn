@@ -89,6 +89,7 @@ pub fn history_interface() {
 
         helper.add_escape_binding(bind_from_str("Q"));
         helper.add_escape_binding(vec![KeyDC]);
+        helper.add_escape_binding(bind_from_str("\x1B"));
 
         let ((op, _), res) =
             helper.call_mode_by_name(
@@ -103,7 +104,7 @@ pub fn history_interface() {
         if let Some(b) = res {
             if b == bind_from_str("Q") {
                 break;
-            } else if b == vec![KeyDC] {
+            } else if b == vec![KeyDC] || b == bind_from_str("\x1B") {
                 print_command(&ui.window, "", 0);
                 continue;
             } else {
