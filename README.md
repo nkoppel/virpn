@@ -12,7 +12,7 @@ A calculator designed for efficiency inspired by [vim](https://www.vim.org/), [v
 - 52 variables
 - Undo and redo
 
-## Usage
+## Concepts
 
 ### Operators
 
@@ -21,6 +21,23 @@ Operators are functions which can modify the stack and hidden state (i.e. variab
 ### The Stack and Lists
 
 The stack is where the numbers you are working with go. It is displayed with the top of the stack at the bottom. It can contain numbers and lists also containing lists and numbers. The stack can also move "down" into lists within it and back "up" into containing lists.
+
+#### Operators and Lists
+When an operator which takes one number is applied to a list, it applies to each number recursively. i.e.
+
+    [2 [3 4]] square  = [4 [9 16]]
+
+When an operator which takes two numbers is applied to a list and a number, the number is used recursively. i.e.
+
+    [1 [2 3]]  1 +  = [2 [3 4]]
+
+When an operator which takes two numbers is applied to two lists, the elements from each list are paired up until one list runs out of elements. i.e.
+
+    [1 2 3]  [1 2] +  = [2 4]
+
+The previous two rules are also applied recursively. i.e.
+
+    [[1 2] [3 4] 5]  [1 [2]] +  = [[2 3] [5]]
 
 ### Line Edit Mode
 
