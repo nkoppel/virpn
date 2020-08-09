@@ -37,9 +37,15 @@ fn range(stack: &mut Stack) {
         return;
     }
 
-    match (stack.pop().unwrap(), stack.pop().unwrap()) {
-        (Num(n2), Num(n1)) => {
-            let (n1, n2) = (n1 as usize, n2 as usize);
+    let mut new_stack = Stack::new();
+    new_stack.push(stack.pop().unwrap());
+    new_stack.push(stack.pop().unwrap());
+    new_stack.rev();
+
+    let f: Box<Fn(Vec<f64>) -> Item> =
+        Box::new(|v| {
+            let n1 = v[0] as usize;
+            let n2 = v[1] as usize;
 
             let iter: Box<dyn Iterator<Item = usize>> =
                 if n1 > n2 {
@@ -53,13 +59,10 @@ fn range(stack: &mut Stack) {
             for i in iter {
                 list.push(Num(i as f64));
             }
-            stack.push(List(list));
-        }
-        (i1, i2) => {
-            stack.push(i1);
-            stack.push(i2);
-        }
-    }
+            List(list)
+        });
+
+    stack.push(new_stack.apply_map(&f))
 }
 
 use std::f64::consts;

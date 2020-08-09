@@ -90,7 +90,7 @@ impl Stack {
         self.curr.len()
     }
 
-    pub fn apply_map(self, f: &impl Fn(Vec<f64>) -> f64) -> Item {
+    pub fn apply_map(self, f: &impl Fn(Vec<f64>) -> Item) -> Item {
         let mut only_num = true;
 
         for x in self.curr.iter() {
@@ -110,7 +110,7 @@ impl Stack {
                     _ => panic!()
                 }
             ).collect();
-            return Num(f(input));
+            return f(input);
         }
 
         let mut iters: Vec<_> =

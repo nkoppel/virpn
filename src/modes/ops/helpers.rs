@@ -1,4 +1,5 @@
 use crate::stack::Stack;
+use crate::stack::Item;
 use crate::stack::Item::*;
 
 pub type Op = Box<Fn(&mut Stack) -> ()>;
@@ -15,7 +16,7 @@ pub fn op_1(f: &'static impl Fn(f64) -> f64) -> Op {
 
         let mut new_stack = Stack::new();
         new_stack.push(stack.pop().unwrap());
-        let g: Box<Fn(Vec<f64>) -> f64> = Box::new(move |s| f(s[0]));
+        let g: Box<Fn(Vec<f64>) -> Item> = Box::new(move |s| Num(f(s[0])));
         stack.push(new_stack.apply_map(&g));
     })
 }
@@ -30,7 +31,7 @@ pub fn op_2(f: &'static impl Fn(f64, f64) -> f64) -> Op {
         new_stack.push(stack.pop().unwrap());
         new_stack.push(stack.pop().unwrap());
         new_stack.rev();
-        let g: Box<Fn(Vec<f64>) -> f64> = Box::new(move |s| f(s[0], s[1]));
+        let g: Box<Fn(Vec<f64>) -> Item> = Box::new(move |s| Num(f(s[0], s[1])));
         stack.push(new_stack.apply_map(&g));
     })
 }
