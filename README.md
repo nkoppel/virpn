@@ -27,6 +27,7 @@ Line edit mode allows you to chain operators together and define lists without c
     'cc' or 'C'            = clear the stack
     '<space>' or '<enter>' = push number/repeat last action
     '<delete>' or '<esc>'  = clear input line
+    'Q'                    = quit
 
     "asdfghjkl;"           = insert digit "1234567890", respectively
     'm' or '.'             = insert decimal point

@@ -60,7 +60,7 @@ impl Mode for History_mode {
             print_command(&ui.window, line, line.len());
             *ui.get_stack() = stack.clone();
 
-        } else if op == "redo" && self.index < self.undos.len() {
+        } else if op == "redo" && self.index < self.undos.len() - 1 {
             self.index += 1;
 
             let (line, stack) = &self.undos[self.index];
