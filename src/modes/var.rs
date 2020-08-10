@@ -39,8 +39,8 @@ impl Mode for Var_mode {
         if word1 == "get" {
             stack.push(self.values[index_from_str(word2)].clone());
         } else if word1 == "set" {
-            if let Some(i) = stack.pop() {
-                self.values[index_from_str(word2)] = i;
+            if let Some(i) = stack.last() {
+                self.values[index_from_str(word2)] = i.clone();
             }
         }
 
