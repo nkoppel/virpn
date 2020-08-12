@@ -60,9 +60,14 @@ impl Stack {
 
     pub fn down(&mut self) {
         let mut tmp =
-            match self.curr.pop() {
-                Some(List(t)) => t,
-                _ => Vec::new()
+            if let Some(List(_)) = self.curr.last() {
+                if let Some(List(l)) = self.curr.pop() {
+                    l
+                } else {
+                    panic!();
+                }
+            } else {
+                Vec::new()
             };
 
         std::mem::swap(&mut tmp, &mut self.curr);
