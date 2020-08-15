@@ -32,6 +32,27 @@ fn rotate(stack: &mut Stack) {
     stack.insert(0, i);
 }
 
+fn flatten_helper(item: Item) -> Vec<Item> {
+    match item {
+        List(l) => {
+            let mut out = Vec::new();
+
+            for i in l {
+                out.append(&mut flatten_helper(i));
+            }
+
+            out
+        }
+        _ => vec![item]
+    }
+}
+
+fn flatten(stack: &mut Stack) {
+    if let Some(item) = stack.pop() {
+        stack.push(List(flatten_helper(item)));
+    }
+}
+
 fn range(stack: &mut Stack) {
     if stack.len() < 2 {
         return;
@@ -107,17 +128,18 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("msum"  , vec!["ism", "om"     ], fold_op(&|x, y| x * y, 1.)),
 
         ("clear" , vec!["C", "cc", "isc"], basic(&|st| st.clear())),
-        ("swap"  , vec!["ow"            ], basic(&swap)),
-        ("rotate", vec!["oo"            ], basic(&rotate)),
-        ("dup"   , vec!["od"            ], basic(&duplicate)),
-        ("pop"   , vec!["op"            ], basic(&|st| {st.pop();})),
-        ("rev"   , vec!["ov"            ], basic(&|st| st.rev())),
+        ("swap"  , vec!["isw", "ow"     ], basic(&swap)),
+        ("rotate", vec!["iso", "oo"     ], basic(&rotate)),
+        ("dup"   , vec!["isd", "od"     ], basic(&duplicate)),
+        ("pop"   , vec!["isp", "op"     ], basic(&|st| {st.pop();})),
+        ("rev"   , vec!["isv", "ov"     ], basic(&|st| st.rev())),
 
         ("new_list" , vec!["iln"], basic(&|st| st.push(List(Vec::new())))),
         ("sum_list" , vec!["ilu"], list_fold_op(&|x, y| x + y, 0.)),
         ("msum_list", vec!["ilm"], list_fold_op(&|x, y| x * y, 1.)),
 
-        ("range", vec!["ila"], basic(&range)),
+        ("range"  , vec!["ila"], basic(&range)),
+        ("flatten", vec!["ilf"], basic(&flatten)),
 
         ("down"     , vec!["J", "oj"], basic(&|st| st.down())),
         ("up"       , vec!["K", "ok"], basic(&|st| st.up())),
