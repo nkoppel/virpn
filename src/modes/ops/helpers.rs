@@ -1,6 +1,4 @@
-use crate::stack::Stack;
-use crate::stack::Item;
-use crate::stack::Item::*;
+use crate::modes::*;
 
 pub type Op = Box<Fn(&mut Stack) -> ()>;
 
