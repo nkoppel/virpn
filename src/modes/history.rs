@@ -51,7 +51,6 @@ impl Mode for History_mode {
 
             self.undos.push((ops.to_string(), ui.get_stack().clone()));
             self.lines.push(ops.to_string());
-
         } else if op == "undo" && self.index > 0 {
             self.index -= 1;
 

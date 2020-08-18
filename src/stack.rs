@@ -52,6 +52,33 @@ impl Stack {
         self.curr.pop()
     }
 
+    pub fn pop_as_num(&mut self) -> Option<f64> {
+        match self.pop() {
+            Some(Num(n)) => return Some(n),
+            Some(x) => self.push(x),
+            None => {}
+        }
+        None
+    }
+
+    pub fn pop_as_list(&mut self) -> Option<Vec<Item>> {
+        match self.pop() {
+            Some(List(l)) => return Some(l),
+            Some(x) => self.push(x),
+            None => {}
+        }
+        None
+    }
+
+    pub fn pop_as_func(&mut self) -> Option<String> {
+        match self.pop() {
+            Some(Func(f)) => return Some(f),
+            Some(x) => self.push(x),
+            None => {}
+        }
+        None
+    }
+
     pub fn up(&mut self) {
         let mut tmp = self.above.pop().unwrap_or(Vec::new());
         std::mem::swap(&mut tmp, &mut self.curr);
