@@ -28,8 +28,8 @@ fn zero(_: f64, x: f64, y: f64) -> bool { (x > 0.) != (y > 0.) }
 
 pub fn gen_func_ops() -> Vec<(String, Vec<Vec<Input>>, FuncOp)> {
     vec![
-        ("run",        vec!["ifr" ], Box::new(&run) as FuncOp),
-        ("run_times",  vec!["iftr"], Box::new(&run_times)),
+        ("run",        vec!["ifr" ], Rc::new(&run) as FuncOp),
+        ("run_times",  vec!["iftr"], Rc::new(&run_times)),
 
         ("max",        vec!["irx" ], million_solver(&min)),
         ("min",        vec!["irn" ], million_solver(&max)),

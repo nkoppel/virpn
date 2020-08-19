@@ -19,6 +19,14 @@ pub struct Op_mode{
 }
 
 impl Op_mode {
+    fn empty() -> Self {
+        Op_mode {
+            bindings: HashMap::new(),
+            ops: HashMap::new(),
+            func_ops: HashMap::new(),
+        }
+    }
+
     pub fn new() -> Self {
         let mut bindings = HashMap::new();
         let mut ops = HashMap::new();
@@ -69,14 +77,26 @@ impl Mode for Op_mode {
     }
 
     fn eval_operators(&mut self, ui: &mut Ui, op: &str) {
-        ui.insert_mode("ops".to_string(), Box::new(Op_mode::new()));
-
         if let Some(f) = self.ops.get(op) {
             f(ui.get_stack());
         }
-        if let Some(f) = self.func_ops.get(op) {
+        else if let Some(_) = self.func_ops.get(op) {
+            let f = self.func_ops.get(op).unwrap().clone();
+
+            ui.insert_mode(
+                "ops".to_string(),
+                Box::new(mem::replace(self, Self::empty()))
+            );
+
             f(ui);
+
+            return;
         }
+
+        ui.insert_mode(
+            "ops".to_string(),
+            Box::new(mem::replace(self, Self::empty()))
+        );
     }
 
     fn eval_bindings(&self, mut ui: Ui_helper, _: HashMap<&str, &str>)

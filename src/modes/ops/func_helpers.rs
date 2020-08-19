@@ -1,11 +1,11 @@
 use crate::modes::*;
 
-pub type FuncOp = Box<Fn(&mut Ui) -> ()>;
+pub type FuncOp = Rc<Fn(&mut Ui) -> ()>;
 
 fn solver<'a, F>(op: &'static F, start: f64, end: f64) -> FuncOp
     where F: Fn(f64, f64, f64) -> bool
 {
-    Box::new(move |ui: &mut Ui| {
+    Rc::new(move |ui: &mut Ui| {
         let mut tmp_stack = Stack::new();
         let mut stack = ui.get_stack();
 
@@ -67,7 +67,7 @@ pub fn million_solver<'a, F>(op: &'static F) -> FuncOp
 pub fn range_solver<'a, F>(op: &'static F) -> FuncOp
     where F: Fn(f64, f64, f64) -> bool
 {
-    Box::new(move |ui: &mut Ui| {
+    Rc::new(move |ui: &mut Ui| {
         let stack = ui.get_stack();
 
         let start = if let Some(n) = stack.pop_as_num() {n} else {return};
