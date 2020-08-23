@@ -34,6 +34,27 @@ pub fn op_2(f: &'static impl Fn(f64, f64) -> f64) -> Op {
     })
 }
 
+pub fn vec2_op(f: &'static impl Fn(f64, f64) -> (f64, f64)) -> Op {
+    Box::new(move |stack: &mut Stack| {
+        stack.down();
+        if stack.len() < 2 {
+            return;
+        }
+
+        let i2 = stack.pop().unwrap();
+        let i1 = stack.pop().unwrap();
+
+        if let (Num(i1), Num(i2)) = (i1, i2) {
+            let (o1, o2) = f(i1, i2);
+
+            stack.push(Num(o1));
+            stack.push(Num(o2));
+        }
+
+        stack.up();
+    })
+}
+
 pub fn fold_op(f: &'static impl Fn(f64, f64) -> f64, start: f64) -> Op {
     Box::new(move |stack: &mut Stack| {
         let n = stack.apply_fold(f, start);

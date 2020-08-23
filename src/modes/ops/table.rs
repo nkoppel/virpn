@@ -3,6 +3,8 @@ use crate::modes::*;
 use crate::modes::ops::helpers::*;
 use crate::io::bind_from_str;
 
+use std::f64::consts::PI;
+
 fn swap(stack: &mut Stack) {
     if stack.len() < 2 {
         return;
@@ -109,6 +111,9 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("log2"  , vec!["ogs", "og2"    ], op_1(&|x| x.log2())),
         ("log"   , vec!["ogg", "ogl"    ], op_2(&|x, y| x.log(y))),
 
+        ("deg"   , vec!["oad"           ], op_1(&|x| x * 180. / PI)),
+        ("rad"   , vec!["oar"           ], op_1(&|x| x * PI / 180.)),
+
         ("sin"   , vec!["os"            ], op_1(&|x| x.sin())),
         ("cos"   , vec!["oc"            ], op_1(&|x| x.cos())),
         ("tan"   , vec!["ot"            ], op_1(&|x| x.tan())),
@@ -134,7 +139,7 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("pop"   , vec!["isp", "op"     ], basic(&|st| {st.pop();})),
         ("rev"   , vec!["isv", "ov"     ], basic(&|st| st.rev())),
 
-        ("new_list" , vec!["iln"], basic(&|st| st.push(List(Vec::new())))),
+        ("new_list" , vec!["iln"], basic(&|st| {st.push(List(Vec::new())); st.down()})),
         ("sum_list" , vec!["ilu"], list_fold_op(&|x, y| x + y, 0.)),
         ("msum_list", vec!["ilm"], list_fold_op(&|x, y| x * y, 1.)),
 
@@ -143,6 +148,9 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
 
         ("down"     , vec!["J", "oj"], basic(&|st| st.down())),
         ("up"       , vec!["K", "ok"], basic(&|st| st.up())),
+
+        ("components", vec!["ivc"], vec2_op(&|l, a| (a.cos() * l, a.sin() * l))),
+        ("heading"   , vec!["ivh"], vec2_op(&|x, y| ((x*x + y*y).sqrt(), y.atan2(x)))),
     ]
         .into_iter()
         .map(|(name, binds, op)| (
