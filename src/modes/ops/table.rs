@@ -67,10 +67,10 @@ fn range(stack: &mut Stack) {
 
     let f: Box<Fn(Vec<f64>) -> Item> =
         Box::new(|v| {
-            let n1 = v[0] as usize;
-            let n2 = v[1] as usize;
+            let n1 = v[0] as i64;
+            let n2 = v[1] as i64;
 
-            let iter: Box<dyn Iterator<Item = usize>> =
+            let iter: Box<dyn Iterator<Item = i64>> =
                 if n1 > n2 {
                     Box::new((n2..n1+1).rev())
                 } else {
