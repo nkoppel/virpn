@@ -245,3 +245,33 @@ impl Item {
         }
     }
 }
+
+use std::vec::IntoIter;
+use std::slice::{Iter, IterMut};
+
+impl IntoIterator for Stack {
+    type IntoIter = IntoIter<Item>;
+    type Item = Item;
+
+    fn into_iter(self) -> IntoIter<Item> {
+        self.curr.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a Stack {
+    type Item = &'a Item;
+    type IntoIter = Iter<'a, Item>;
+
+    fn into_iter(self) -> Iter<'a, Item> {
+        self.curr.iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a mut Stack {
+    type Item = &'a mut Item;
+    type IntoIter = IterMut<'a, Item>;
+
+    fn into_iter(self) -> IterMut<'a, Item> {
+        self.curr.iter_mut()
+    }
+}

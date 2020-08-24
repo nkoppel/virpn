@@ -38,6 +38,14 @@ pub fn gen_func_ops() -> Vec<(String, Vec<Vec<Input>>, FuncOp)> {
         ("range_max",  vec!["irrx" ], range_solver(&min)),
         ("range_min",  vec!["irrn" ], range_solver(&max)),
         ("range_zero", vec!["irrz" ], range_solver(&zero)),
+
+        ("map_depth",  vec!["ifdm"], Rc::new(map_depth)),
+        ("map"      ,  vec!["ifm" ], Rc::new(|ui: &mut Ui| {ui.get_stack().push(Num(0.)); map_depth(ui)})),
+        ("map_nums" ,  vec!["ifnm"], Rc::new(|ui: &mut Ui| {ui.get_stack().push(Num(usize::max_value() as f64)); map_depth(ui)})),
+
+        ("fold_depth",  vec!["ifdf"], Rc::new(fold_depth)),
+        ("fold"      ,  vec!["iff" ], Rc::new(|ui: &mut Ui| {ui.get_stack().push(Num(0.)); fold_depth(ui)})),
+        ("fold_nums" ,  vec!["ifnf"], Rc::new(|ui: &mut Ui| {ui.get_stack().push(Num(usize::max_value() as f64)); fold_depth(ui)})),
     ]
         .into_iter()
         .map(|(name, binds, op)| (
