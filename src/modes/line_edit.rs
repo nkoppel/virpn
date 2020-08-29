@@ -182,18 +182,21 @@ impl Mode for Line_edit_mode {
                         let len = tmp.len();
 
                         return ((tmp, len), None);
-                    } else
-                    if b == bind_from_str("(") || b == bind_from_str("ifi") {
+                    } else if b == bind_from_str("(") ||
+                              b == bind_from_str("ifi")
+                    {
                         strs.insert(idx, "(".to_string());
                         idx += 1;        
                         strs.insert(idx, ")".to_string());
-                    } else
-                    if b == bind_from_str("[") || b == bind_from_str("ili") {
+                    } else if b == bind_from_str("[") ||
+                              b == bind_from_str("ili")
+                    {
                         strs.insert(idx, "[".to_string());
                         idx += 1;        
                         strs.insert(idx, "]".to_string());
-                    } else
-                    if b != bind_from_str(" ") && b != bind_from_str("I") {
+                    } else if b != bind_from_str(" ") &&
+                              b != bind_from_str("I")
+                    {
                         return ((String::new(), 0), Some(b));
                     }
                 }

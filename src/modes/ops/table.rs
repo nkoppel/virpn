@@ -105,6 +105,7 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("cbrt"  , vec!["ob"            ], op_1(&|x| x.cbrt())),
         ("nth_rt", vec!["on"            ], op_2(&|x, y| x.powf(1. / y))),
         ("negate", vec!["oe"            ], op_1(&|x| -x)),
+        ("abs"   , vec!["oab"           ], op_1(&|x| x.abs())),
 
         ("ln"    , vec!["oge"           ], op_1(&|x| x.ln())),
         ("log10" , vec!["oga", "og1"    ], op_1(&|x| x.log10())),

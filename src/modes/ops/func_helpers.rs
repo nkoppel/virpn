@@ -23,13 +23,11 @@ fn solver<'a, F>(op: &'static F, start: f64, end: f64) -> FuncOp
         let f = if let Some(f) = tmp_stack.pop_as_func() {f} else {return};
 
         stack.push(Num(start));
-        mem::drop(stack);
         ui.eval(f.clone());
         stack = ui.get_stack();
         f_start = if let Some(n) = stack.pop_as_num() {n} else {return};
 
         stack.push(Num(end));
-        mem::drop(stack);
         ui.eval(f.clone());
         stack = ui.get_stack();
         f_end = if let Some(n) = stack.pop_as_num() {n} else {return};
@@ -38,7 +36,6 @@ fn solver<'a, F>(op: &'static F, start: f64, end: f64) -> FuncOp
             mid = (start + end) / 2.;
 
             stack.push(Num(mid));
-            mem::drop(stack);
             ui.eval(f.clone());
             stack = ui.get_stack();
             f_mid = if let Some(n) = stack.pop_as_num() {n} else {return};
@@ -61,7 +58,7 @@ fn solver<'a, F>(op: &'static F, start: f64, end: f64) -> FuncOp
 pub fn million_solver<'a, F>(op: &'static F) -> FuncOp
     where F: Fn(f64, f64, f64) -> bool
 {
-    solver(op, -1000000., 1000000.)
+    solver(op, -1_000_000., 1_000_000.)
 }
 
 pub fn range_solver<'a, F>(op: &'static F) -> FuncOp
@@ -72,8 +69,6 @@ pub fn range_solver<'a, F>(op: &'static F) -> FuncOp
 
         let start = if let Some(n) = stack.pop_as_num() {n} else {return};
         let end   = if let Some(n) = stack.pop_as_num() {n} else {return};
-
-        mem::drop(stack);
 
         solver(op, start, end)(ui)
     })
@@ -135,7 +130,6 @@ pub fn map_depth(ui: &mut Ui) {
             } else if let Some(l) = stack.pop_as_list() {
                 let mut tmp = mem::replace(stack, Stack::from_vec(l));
 
-                mem::drop(stack);
                 depth_helper(ui, depth - 1, &mut f);
                 stack = ui.get_stack();
 
@@ -149,8 +143,8 @@ pub fn map_depth(ui: &mut Ui) {
 pub fn fold_depth(ui: &mut Ui) {
     let mut stack = ui.get_stack();
 
-    if let Some(depth) = stack.pop_as_num() {
-        if let Some(mut state) = stack.pop() {
+    if let Some(mut state) = stack.pop() {
+        if let Some(depth) = stack.pop_as_num() {
             if let Some(f) = stack.pop_as_func() {
                 let mut f = |ui: &mut Ui| {
                     ui.get_stack().push(state.clone());
@@ -164,7 +158,6 @@ pub fn fold_depth(ui: &mut Ui) {
                 let depth = depth as usize;
 
                 if depth == 0 {
-                    mem::drop(stack);
                     depth_helper(ui, depth, &mut f);
                     stack = ui.get_stack();
 
@@ -173,7 +166,6 @@ pub fn fold_depth(ui: &mut Ui) {
                 } else if let Some(l) = stack.pop_as_list() {
                     let mut tmp = mem::replace(stack, Stack::from_vec(l));
 
-                    mem::drop(stack);
                     depth_helper(ui, depth - 1, &mut f);
                     stack = ui.get_stack();
 

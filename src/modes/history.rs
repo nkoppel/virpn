@@ -21,7 +21,7 @@ impl History_mode {
 fn ret_history_add(s: &str, res: Option<Vec<Input>>)
     -> ModeRes<(String, usize)>
 {
-    return ((format!("history_add {}", s), s.len() + 11), res);
+    ((format!("history_add {}", s), s.len() + 11), res)
 }
 
 impl Mode for History_mode {
@@ -130,7 +130,7 @@ impl Mode for History_mode {
             }
         }
         if !op.is_empty() {
-            return ret_history_add(&op, res);
+            ret_history_add(&op, res)
         } else {
             ((String::new(), 0), res)
         }
