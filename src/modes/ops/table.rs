@@ -88,6 +88,30 @@ fn range(stack: &mut Stack) {
     stack.push(new_stack.apply_map(&f))
 }
 
+fn round_digits(mut x: f64, digits: f64) -> f64 {
+    let digits = digits as i32;
+    let base: f64 = 10.;
+    let scale = base.powi(digits);
+
+    x *= scale;
+    x = x.round();
+    x /= scale;
+
+    x
+}
+
+fn clean_errors(mut x: f64) -> f64 {
+    let base: f64 = 10.;
+    let digits = 14 - x.log10() as i32;
+    let scale = base.powi(digits);
+
+    x *= scale;
+    x = x.round();
+    x /= scale;
+
+    x
+}
+
 use std::f64::consts;
 use std::f64;
 
@@ -139,6 +163,12 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("dup"   , vec!["isd", "od"     ], basic(&duplicate)),
         ("pop"   , vec!["isp", "op"     ], basic(&|st| {st.pop();})),
         ("rev"   , vec!["isv", "ov"     ], basic(&|st| st.rev())),
+
+        ("round"       , vec!["ior"       ], op_1(&|x| x.round())),
+        ("floor"       , vec!["iof"       ], op_1(&|x| x.floor())),
+        ("ceil"        , vec!["ioc"       ], op_1(&|x| x.ceil())),
+        ("round_digits", vec!["iord"      ], op_2(&round_digits)),
+        ("clean_errors", vec!["ioe", "ioc"], op_1(&clean_errors)),
 
         ("new_list" , vec!["iln"], basic(&|st| {st.push(List(Vec::new())); st.down()})),
         ("sum_list" , vec!["ilu"], list_fold_op(&|x, y| x + y, 0.)),
