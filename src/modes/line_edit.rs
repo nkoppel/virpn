@@ -94,6 +94,7 @@ impl Mode for Line_edit_mode {
         ui.add_escape_binding(vec![Character(' ')]);
 
         ui.add_escape_binding(bind_from_str("I"));
+        ui.add_escape_binding(bind_from_str("u"));
         ui.add_escape_binding(bind_from_str("ili"));
         ui.add_escape_binding(bind_from_str("ifi"));
         ui.add_escape_binding(bind_from_str("("));
@@ -107,6 +108,7 @@ impl Mode for Line_edit_mode {
             };
 
         let mut strs: Vec<_> = strs.into_iter().map(|(_, x)| x).collect();
+        let mut strs_hist = Vec::new();
         let mut idx = strs.len();
         let mut inputs = Vec::new();
 
@@ -140,6 +142,7 @@ impl Mode for Line_edit_mode {
             let ((_, s, _, _), _) = &out;
 
             if !s.is_empty() {
+                strs_hist.push((idx, strs.clone()));
                 strs.insert(idx, s.clone());
                 idx += 1;
             }
@@ -155,6 +158,7 @@ impl Mode for Line_edit_mode {
                             idx += 1;
                         }
                     } else if b == vec![KeyBackspace] {
+                        strs_hist.push((idx, strs.clone()));
                         if idx > 0 {
                             idx -= 1;
                             let tmp = strs.remove(idx);
@@ -171,6 +175,7 @@ impl Mode for Line_edit_mode {
                             return ((String::new(), 0), None);
                         }
                     } else if b == vec![KeyDC] {
+                        strs_hist.push((idx, strs.clone()));
                         if idx < strs.len() {
                             strs.remove(idx);
                         } else if strs.is_empty() {
@@ -185,15 +190,22 @@ impl Mode for Line_edit_mode {
                     } else if b == bind_from_str("(") ||
                               b == bind_from_str("ifi")
                     {
+                        strs_hist.push((idx, strs.clone()));
                         strs.insert(idx, "(".to_string());
                         idx += 1;        
                         strs.insert(idx, ")".to_string());
                     } else if b == bind_from_str("[") ||
                               b == bind_from_str("ili")
                     {
+                        strs_hist.push((idx, strs.clone()));
                         strs.insert(idx, "[".to_string());
                         idx += 1;        
                         strs.insert(idx, "]".to_string());
+                    } else if b == bind_from_str("u") {
+                        if let Some((i, s)) = strs_hist.pop() {
+                            idx = i;
+                            strs = s;
+                        }
                     } else if b != bind_from_str(" ") &&
                               b != bind_from_str("I")
                     {
