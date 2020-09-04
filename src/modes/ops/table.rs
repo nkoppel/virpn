@@ -112,6 +112,26 @@ fn clean_errors(mut x: f64) -> f64 {
     x
 }
 
+fn poly(stack: &mut Stack) {
+    let mut l = if let Some(l) = stack.pop_as_list() {l} else {return};
+    let x = if let Some(x) = stack.pop() {x} else {stack.push(List(l)); return};
+
+    let add = op_2(&|x, y| x + y);
+    let mul = op_2(&|x, y| x * y);
+
+    l.reverse();
+
+    let mut tmp_stack = Stack::from_vec(l);
+
+    while tmp_stack.len() > 1 {
+        tmp_stack.push(x.clone());
+        mul(&mut tmp_stack);
+        add(&mut tmp_stack);
+    }
+
+    stack.push(tmp_stack.pop().unwrap());
+}
+
 use std::f64::consts;
 use std::f64;
 
@@ -164,19 +184,20 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("pop"   , vec!["isp", "op"     ], basic(&|st| {st.pop();})),
         ("rev"   , vec!["isv", "ov"     ], basic(&|st| st.rev())),
 
-        ("round"       , vec!["ior"       ], op_1(&|x| x.round())),
-        ("floor"       , vec!["iof"       ], op_1(&|x| x.floor())),
-        ("ceil"        , vec!["ioc"       ], op_1(&|x| x.ceil())),
-        ("round_digits", vec!["iord"      ], op_2(&round_digits)),
-        ("clean_errors", vec!["ioe", "ioc"], op_1(&clean_errors)),
+        ("round"       , vec!["ior"             ], op_1(&|x| x.round())),
+        ("floor"       , vec!["iof"             ], op_1(&|x| x.floor())),
+        ("ceil"        , vec!["ioc"             ], op_1(&|x| x.ceil())),
+        ("round_digits", vec!["iord"            ], op_2(&round_digits)),
+        ("clean_errors", vec!["ioe", "ioc", "ol"], op_1(&clean_errors)),
 
         ("new_list" , vec!["iln"], basic(&|st| {st.push(List(Vec::new())); st.down()})),
         ("sum_list" , vec!["ilu"], list_fold_op(&|x, y| x + y, 0.)),
         ("msum_list", vec!["ilm"], list_fold_op(&|x, y| x * y, 1.)),
         ("rev_list" , vec!["ilv"], basic(&|st| {st.down(); st.rev(); st.up()})),
 
-        ("range"  , vec!["ila"], basic(&range)),
-        ("flatten", vec!["ilf"], basic(&flatten)),
+        ("range"  , vec!["ila"      ], basic(&range)),
+        ("flatten", vec!["ilf"      ], basic(&flatten)),
+        ("poly"   , vec!["ilp", "op"], Box::new(poly)),
 
         ("down"     , vec!["J", "oj"], basic(&|st| st.down())),
         ("up"       , vec!["K", "ok"], basic(&|st| st.up())),
