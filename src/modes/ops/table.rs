@@ -195,9 +195,9 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("msum_list", vec!["ilm"], list_fold_op(&|x, y| x * y, 1.)),
         ("rev_list" , vec!["ilv"], basic(&|st| {st.down(); st.rev(); st.up()})),
 
-        ("range"  , vec!["ila"      ], basic(&range)),
-        ("flatten", vec!["ilf"      ], basic(&flatten)),
-        ("poly"   , vec!["ilp", "op"], Box::new(poly)),
+        ("range"  , vec!["ila"], basic(&range)),
+        ("flatten", vec!["ilf"], basic(&flatten)),
+        ("poly"   , vec!["ilp"], Box::new(poly)),
 
         ("down"     , vec!["J", "oj"], basic(&|st| st.down())),
         ("up"       , vec!["K", "ok"], basic(&|st| st.up())),
