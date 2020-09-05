@@ -114,7 +114,27 @@ fn clean_errors(mut x: f64) -> f64 {
 
 fn poly(stack: &mut Stack) {
     let mut l = if let Some(l) = stack.pop_as_list() {l} else {return};
-    let x = if let Some(x) = stack.pop() {x} else {stack.push(List(l)); return};
+    let x =
+        match stack.pop() {
+            Some(Func(f)) => {
+                stack.push(Func(f));
+                stack.push(List(l));
+                return
+            },
+            Some(x) => x,
+            _ => {
+                stack.push(List(l));
+                return
+            }
+        };
+
+    for i in l.iter() {
+        if let Func(_) = i {
+            stack.push(x);
+            stack.push(List(l));
+            return
+        }
+    }
 
     let add = op_2(&|x, y| x + y);
     let mul = op_2(&|x, y| x * y);
