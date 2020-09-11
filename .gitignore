@@ -1,2 +1,4 @@
 /target
 **/*.rs.bk
+www/node_modules
+www/dist
