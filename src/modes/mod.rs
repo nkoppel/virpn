@@ -6,7 +6,12 @@ pub use crate::stack::Stack;
 pub use crate::stack::{Item, Item::*};
 pub use crate::io::*;
 
+#[cfg(not(target_arch = "wasm32"))]
 pub use pancurses::{Input, Input::*, Window};
+
+#[cfg(target_arch = "wasm32")]
+pub use crate::terminal::{Input, Input::*, Window};
+
 pub use regex::Regex;
 
 pub use std::mem;

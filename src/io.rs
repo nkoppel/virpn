@@ -1,4 +1,8 @@
-use pancurses::{Input, Input::*, Window};
+#[cfg(not(target_arch = "wasm32"))]
+use pancurses::{Input, Input::*, Window, noecho};
+
+#[cfg(target_arch = "wasm32")]
+use crate::terminal::{Input, Input::*, Window, noecho};
 
 use std::collections::HashMap;
 
@@ -131,7 +135,7 @@ impl<T> Bindings<T> where T: Clone {
         -> (Vec<Input>, T)
     {
         window.keypad(true);
-        pancurses::noecho();
+        noecho();
 
         loop {
             match self.add(window.getch().unwrap()) {
@@ -188,7 +192,7 @@ pub fn print_command(window: &Window, cmd: &str, cursor_loc: usize) {
     let len = cmd.len();
 
     window.mv(height - 2, 0);
-    window.addstr("=".repeat(width));
+    window.addstr(&"=".repeat(width));
 
     window.mv(height - 1, 0);
     window.clrtoeol();

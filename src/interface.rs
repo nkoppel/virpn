@@ -8,7 +8,11 @@ use crate::modes::{
     line_edit::Line_edit_mode
 };
 
+#[cfg(not(target_arch = "wasm32"))]
 use pancurses::{initscr, endwin};
+
+#[cfg(target_arch = "wasm32")]
+use crate::terminal::{initscr, endwin};
 
 fn new_ui(window: Window) -> Ui {
     Ui::build(window, vec![

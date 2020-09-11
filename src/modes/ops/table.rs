@@ -207,7 +207,7 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("round"       , vec!["ior"             ], op_1(&|x| x.round())),
         ("floor"       , vec!["iof"             ], op_1(&|x| x.floor())),
         ("ceil"        , vec!["ioc"             ], op_1(&|x| x.ceil())),
-        ("round_digits", vec!["iord"            ], op_2(&round_digits)),
+        ("round_digits", vec!["iodr"            ], op_2(&round_digits)),
         ("clean_errors", vec!["ioe", "ioc", "ol"], op_1(&clean_errors)),
 
         ("new_list" , vec!["iln"], basic(&|st| {st.push(List(Vec::new())); st.down()})),

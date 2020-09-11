@@ -11,6 +11,8 @@ pub use wasm_bindgen::prelude::*;
 
 use crate::interface::*;
 
-pub fn main() {
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(start)]
+pub fn wasm_start() {
     history_interface();
 }
