@@ -37,7 +37,7 @@ pub type ModeRes<T> = (T, Option<Vec<Input>>);
 pub struct Ui {
     operator_regexes: Vec<(Regex, String)>,
     bindings: Bindings<(bool, String)>,
-    modes: HashMap<String, Box<Mode>>,
+    modes: HashMap<String, Box<dyn Mode>>,
     stack: Stack,
     pub window: Window
 }
@@ -87,7 +87,7 @@ impl Ui {
         Ui_helper::new(self.clone(), &self.bindings)
     }
 
-    pub fn get_mode(&self, mode: &str) -> Option<&Box<Mode>> {
+    pub fn get_mode(&self, mode: &str) -> Option<&Box<dyn Mode>> {
         match self.modes.get(mode) {
             None => None,
             Some(r) => Some(r)

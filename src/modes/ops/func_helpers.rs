@@ -1,6 +1,6 @@
 use crate::modes::*;
 
-pub type FuncOp = Rc<Fn(&mut Ui) -> ()>;
+pub type FuncOp = Rc<dyn Fn(&mut Ui) -> ()>;
 
 fn solver<'a, F>(op: &'static F, start: f64, end: f64) -> FuncOp
     where F: Fn(f64, f64, f64) -> bool
