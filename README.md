@@ -138,11 +138,24 @@ Note: The locations of the letters for addition, subtraction, and division are b
 
 Note: \<letter\> can be any upper or lower case letter
 
+### Functions
+
+    'ifi' or '[' = write a new function in line edit mode
+    'ifr'        = pop a function and run it on the current stack
+    'iftr'       = pop a number and a function and run the function that number of times
+
+    'ifm'        = apply the function to all items in the current stack
+    'ifnm'       = apply the function to all numbers in a nested list
+
+    'iff'        = fold the function across all items in the current stack
+    'ifnf'       = fold the function across all numbers in a nested list
+
 
 ### Line Editing
 
     'I'                    = begin line editing
     'ili' or '['           = If not in line edit mode, enter it. Begin writing a new list.
+    'ifi' or '('           = If not in line edit mode, enter it. Begin writing a new function.
     '<left>'               = move left one operator/number
     '<right>'              = move right one operator/number
     '<space>' or '<enter>' = run current line and exit line edit mode

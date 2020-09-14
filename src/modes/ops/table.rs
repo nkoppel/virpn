@@ -152,6 +152,16 @@ fn poly(stack: &mut Stack) {
     stack.push(tmp_stack.pop().unwrap());
 }
 
+fn transpose(stack: &mut Stack) {
+    let mut new_stack = Stack::new();
+    let l = if let Some(l) = stack.pop_as_list() {l} else {return};
+
+    new_stack.push(List(l));
+    stack.push(
+        new_stack.apply_map(&|l| List(l.into_iter().map(|x| Num(x)).collect()))
+    );
+}
+
 use std::f64::consts;
 use std::f64;
 
@@ -217,6 +227,7 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
 
         ("range"  , vec!["ila"], basic(&range)),
         ("flatten", vec!["ilf"], basic(&flatten)),
+        ("transpose", vec!["ilt"], Box::new(transpose)),
         ("poly"   , vec!["ilp"], Box::new(poly)),
 
         ("down"     , vec!["J", "oj"], basic(&|st| st.down())),
