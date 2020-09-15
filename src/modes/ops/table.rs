@@ -153,10 +153,9 @@ fn poly(stack: &mut Stack) {
 }
 
 fn transpose(stack: &mut Stack) {
-    let mut new_stack = Stack::new();
     let l = if let Some(l) = stack.pop_as_list() {l} else {return};
 
-    new_stack.push(List(l));
+    let new_stack = Stack::from_vec(l);
     stack.push(
         new_stack.apply_map(&|l| List(l.into_iter().map(|x| Num(x)).collect()))
     );
