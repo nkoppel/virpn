@@ -101,6 +101,10 @@ fn round_digits(mut x: f64, digits: f64) -> f64 {
 }
 
 fn clean_errors(mut x: f64) -> f64 {
+    if x == 0. {
+        return 0.;
+    }
+
     let base: f64 = 10.;
     let digits = 14 - x.abs().log10() as i32;
     let scale = base.powi(digits);
@@ -178,6 +182,7 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("cbrt"  , vec!["ob"            ], op_1(&|x| x.cbrt())),
         ("nth_rt", vec!["on"            ], op_2(&|x, y| x.powf(1. / y))),
         ("negate", vec!["oe"            ], op_1(&|x| -x)),
+        ("invert", vec!["oi"            ], op_1(&|x| 1. / x)),
         ("abs"   , vec!["oab"           ], op_1(&|x| x.abs())),
 
         ("ln"    , vec!["oge"           ], op_1(&|x| x.ln())),
