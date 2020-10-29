@@ -88,6 +88,37 @@ fn range(stack: &mut Stack) {
     stack.push(new_stack.apply_map(&f))
 }
 
+fn repeat(stack: &mut Stack) {
+    if stack.len() < 2 {
+        return;
+    }
+
+    let mut new_stack = Stack::new();
+    new_stack.push(stack.pop().unwrap());
+    let item = stack.pop().unwrap();
+    new_stack.rev();
+
+    let f: Box<dyn Fn(Vec<f64>) -> Item> =
+        Box::new(|v| {
+            let n2 = v[0].abs() as u64;
+
+            let mut list = Vec::new();
+
+            for _ in 0..n2 {
+                list.push(item.clone());
+            }
+            List(list)
+        });
+
+    stack.push(new_stack.apply_map(&f))
+}
+
+fn list_len(stack: &mut Stack) {
+    if let Some(l) = stack.pop_as_list() {
+        stack.push(Num(l.len() as f64));
+    }
+}
+
 fn round_digits(mut x: f64, digits: f64) -> f64 {
     let digits = digits as i32;
     let base: f64 = 10.;
@@ -230,6 +261,8 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("rev_list" , vec!["ilv"], basic(&|st| {st.down(); st.rev(); st.up()})),
 
         ("range"  , vec!["ila"], basic(&range)),
+        ("repeat" , vec!["ilr"], basic(&repeat)),
+        ("len"    , vec!["ill"], basic(&list_len)),
         ("flatten", vec!["ilf"], basic(&flatten)),
         ("transpose", vec!["ilt"], Box::new(transpose)),
         ("poly"   , vec!["ilp"], Box::new(poly)),
