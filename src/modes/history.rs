@@ -83,12 +83,6 @@ impl Mode for History_mode {
         ui.add_escape_binding(bind_from_str(" "));
         ui.add_escape_binding(bind_from_str("\n"));
 
-        ui.add_escape_binding(bind_from_str("E"));
-        ui.add_escape_binding(vec![KeyLeft]);
-        ui.add_escape_binding(vec![KeyRight]);
-        ui.add_escape_binding(vec![KeyBackspace]);
-        ui.add_escape_binding(vec![KeyDC]);
-
         let out = ui.call_mode_by_next_binding(Vec::new());
 
         let ((_, op, _, _), res) = out;
@@ -120,9 +114,6 @@ impl Mode for History_mode {
                         KeyDown => if loc < self.lines.len() - 1 {loc += 1},
                         Character(' ') | Character('\n') => {
                             return ret_history_add(&line, None);
-                        }
-                        KeyLeft | KeyRight | KeyBackspace | KeyDC => {
-                            ui.call_mode_by_name()
                         }
                         _ => {
                             ui.print_output("", 0);
