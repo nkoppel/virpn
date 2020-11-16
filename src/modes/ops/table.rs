@@ -3,8 +3,6 @@ use crate::modes::*;
 use crate::modes::ops::helpers::*;
 use crate::io::bind_from_str;
 
-use std::f64::consts::PI;
-
 fn swap(stack: &mut Stack) {
     if stack.len() < 2 {
         return;
@@ -213,16 +211,20 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("cbrt"  , vec!["ob"            ], op_1(&|x| x.cbrt())),
         ("nth_rt", vec!["on"            ], op_2(&|x, y| x.powf(1. / y))),
         ("negate", vec!["oe"            ], op_1(&|x| -x)),
-        ("invert", vec!["oi"            ], op_1(&|x| 1. / x)),
+        ("invert", vec!["oi"            ], op_1(&|x| x.recip())),
         ("abs"   , vec!["oab"           ], op_1(&|x| x.abs())),
+
+        ("pow"   , vec!["iwe"              ], op_1(&|x| x.exp())),
+        ("pow2"  , vec!["iws", "iw2", "iww"], op_1(&|x| x.exp2())),
+        ("pow10" , vec!["iwa", "iw1"       ], op_1(&|x| (10f64).powf(x))),
 
         ("ln"    , vec!["oge"           ], op_1(&|x| x.ln())),
         ("log10" , vec!["oga", "og1"    ], op_1(&|x| x.log10())),
         ("log2"  , vec!["ogs", "og2"    ], op_1(&|x| x.log2())),
         ("log"   , vec!["ogg", "ogl"    ], op_2(&|x, y| x.log(y))),
 
-        ("deg"   , vec!["oad"           ], op_1(&|x| x * 180. / PI)),
-        ("rad"   , vec!["oar"           ], op_1(&|x| x * PI / 180.)),
+        ("deg"   , vec!["oad"           ], op_1(&|x| x.to_degrees())),
+        ("rad"   , vec!["oar"           ], op_1(&|x| x.to_radians())),
 
         ("sin"   , vec!["os"            ], op_1(&|x| x.sin())),
         ("cos"   , vec!["oc"            ], op_1(&|x| x.cos())),
