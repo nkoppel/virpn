@@ -3,6 +3,11 @@ use crate::modes::*;
 use crate::modes::ops::helpers::*;
 use crate::io::bind_from_str;
 
+fn add(stack: &mut Stack) {op_2(&|x, y| x + y)(stack)}
+fn sub(stack: &mut Stack) {op_2(&|x, y| x - y)(stack)}
+fn mul(stack: &mut Stack) {op_2(&|x, y| x * y)(stack)}
+fn div(stack: &mut Stack) {op_2(&|x, y| x / y)(stack)}
+
 fn swap(stack: &mut Stack) {
     if stack.len() < 2 {
         return;
@@ -145,7 +150,7 @@ fn clean_errors(mut x: f64) -> f64 {
     x
 }
 
-fn poly(stack: &mut Stack) {
+fn synth_div(stack: &mut Stack) {
     let mut l = if let Some(l) = stack.pop_as_list() {l} else {return};
     let x =
         match stack.pop() {
@@ -169,16 +174,102 @@ fn poly(stack: &mut Stack) {
         }
     }
 
-    let add = op_2(&|x, y| x + y);
-    let mul = op_2(&|x, y| x * y);
-
     l.reverse();
 
     let mut tmp_stack = Stack::from_vec(l);
+    let mut res = Vec::new();
 
     while tmp_stack.len() > 1 {
+        res.push(tmp_stack.last().unwrap().clone());
         tmp_stack.push(x.clone());
         mul(&mut tmp_stack);
+        add(&mut tmp_stack);
+    }
+
+    stack.push(List(res));
+    stack.push(tmp_stack.pop().unwrap());
+}
+
+fn synth_sub(stack: &mut Stack) {
+    synth_div(stack);
+
+    let tmp = if let Some(i) = stack.pop() {i} else {return};
+    stack.pop();
+    stack.push(tmp);
+}
+
+fn poly_div(stack: &mut Stack) {
+    let mut poly2 = if let Some(l) = stack.pop_as_list() {l} else {return};
+    let mut poly1 = if let Some(l) = stack.pop_as_list() {l} else {
+        stack.push(List(poly2));
+        return
+    };
+
+    if poly2.len() > poly1.len() {
+        stack.push(List(poly1));
+        stack.push(List(poly2));
+        return;
+    }
+
+    poly1.reverse();
+    poly2.reverse();
+
+    let rep = poly1.len() - poly2.len();
+    let mut tmp = poly2;
+
+    poly2 = vec![Num(0.); rep];
+    poly2.append(&mut tmp);
+
+    let mut out = Vec::new();
+    let mut tmp_stack = Stack::new();
+
+    for _ in 0..rep + 1 {
+        tmp_stack.push(List(poly1.clone()));
+
+        tmp_stack.push(poly1.last().unwrap().clone());
+        tmp_stack.push(poly2.last().unwrap().clone());
+
+        div(&mut tmp_stack);
+
+        out.push(tmp_stack.last().unwrap().clone());
+        tmp_stack.push(List(poly2.clone()));
+
+        mul(&mut tmp_stack);
+        sub(&mut tmp_stack);
+
+        poly1 = tmp_stack.pop_as_list().unwrap();
+
+        poly1.pop();
+        poly2.remove(0);
+    }
+
+    stack.push(List(out));
+    poly1.reverse();
+    stack.push(List(poly1));
+}
+
+fn poly_mul(stack: &mut Stack) {
+    let poly1 = if let Some(l) = stack.pop_as_list() {l} else {return};
+    let poly2 = if let Some(l) = stack.pop_as_list() {l} else {
+        stack.push(List(poly1));
+        return
+    };
+
+    let len = poly1.len();
+    let mut tmp_stack = Stack::new();
+
+    for (i, item) in poly1.into_iter().enumerate() {
+        tmp_stack.push(item);
+        tmp_stack.push(List(poly2.clone()));
+
+        mul(&mut tmp_stack);
+
+        let mut tmp = vec![Num(0.); i];
+        tmp.append(&mut tmp_stack.pop_as_list().unwrap());
+        tmp.append(&mut vec![Num(0.); len - 1 - i]);
+
+        tmp_stack.push(List(tmp.clone()));
+
         add(&mut tmp_stack);
     }
 
@@ -234,6 +325,14 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("acos"  , vec!["oac"           ], op_1(&|x| x.acos())),
         ("atan"  , vec!["oat"           ], op_1(&|x| x.atan())),
 
+        ("sinh"  , vec!["ohs"           ], op_1(&|x| x.sinh())),
+        ("cosh"  , vec!["ohc"           ], op_1(&|x| x.cosh())),
+        ("tanh"  , vec!["oht"           ], op_1(&|x| x.tanh())),
+
+        ("asinh" , vec!["ohas"          ], op_1(&|x| x.asinh())),
+        ("acosh" , vec!["ohac"          ], op_1(&|x| x.acosh())),
+        ("atanh" , vec!["ohat"          ], op_1(&|x| x.atanh())),
+
         ("pi"    , vec!["cp"            ], constant(consts::PI)),
         ("e"     , vec!["ce"            ], constant(consts::E)),
         ("sqrt_2", vec!["cq"            ], constant(consts::SQRT_2)),
@@ -267,7 +366,11 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("len"    , vec!["ill"], basic(&list_len)),
         ("flatten", vec!["ilf"], basic(&flatten)),
         ("transpose", vec!["ilt"], Box::new(transpose)),
-        ("poly"   , vec!["ilp"], Box::new(poly)),
+
+        ("synth_sub", vec!["ipp", "ilp"], Box::new(synth_sub)),
+        ("synth_div", vec!["ips"       ], Box::new(synth_div)),
+        ("poly_div" , vec!["ipd", "ipe"], Box::new(poly_div)),
+        ("poly_mul" , vec!["ipm", "ipr"], Box::new(poly_mul)),
 
         ("down"     , vec!["J", "oj"], basic(&|st| st.down())),
         ("up"       , vec!["K", "ok"], basic(&|st| st.up())),

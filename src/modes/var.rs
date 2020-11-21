@@ -24,7 +24,7 @@ fn index_from_str(s: &str) -> usize {
 impl Mode for Var_mode {
     fn get_bindings(&self) -> Vec<Vec<Input>> {
         vec![
-            vec![Character('x')],
+            vec![Character('v')],
             vec![Character('z')],
             vec![Character('y')],
             vec![Character('p')],
@@ -106,7 +106,7 @@ impl Mode for Var_mode {
                 ui.print_output("put", 3);
                 return (("put" .to_string(), 3), None)
             },
-            Character('z') | Character('x') => {
+            Character('z') | Character('v') => {
                 let setting = tmp.0 == vec![Character('z')];
                 let mut op = if setting {"set "} else {"get "}.to_string();
 
