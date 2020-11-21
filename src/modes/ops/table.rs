@@ -365,12 +365,12 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("repeat" , vec!["ilr"], basic(&repeat)),
         ("len"    , vec!["ill"], basic(&list_len)),
         ("flatten", vec!["ilf"], basic(&flatten)),
-        ("transpose", vec!["ilt"], Box::new(transpose)),
+        ("transpose", vec!["ilt"], basic(&transpose)),
 
-        ("synth_sub", vec!["ipp", "ilp"], Box::new(synth_sub)),
-        ("synth_div", vec!["ips"       ], Box::new(synth_div)),
-        ("poly_div" , vec!["ipd", "ipe"], Box::new(poly_div)),
-        ("poly_mul" , vec!["ipm", "ipr"], Box::new(poly_mul)),
+        ("synth_sub", vec!["ipp", "ilp"], basic(&synth_sub)),
+        ("synth_div", vec!["ips"       ], basic(&synth_div)),
+        ("poly_div" , vec!["ipd", "ipe"], basic(&poly_div)),
+        ("poly_mul" , vec!["ipm", "ipr"], basic(&poly_mul)),
 
         ("down"     , vec!["J", "oj"], basic(&|st| st.down())),
         ("up"       , vec!["K", "ok"], basic(&|st| st.up())),
