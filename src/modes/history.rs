@@ -92,9 +92,8 @@ impl Mode for History_mode {
                 if op.is_empty() {
                     let s =
                         self.lines.last().unwrap_or(&String::new()).to_string();
-                    let len = s.len();
 
-                    return ((s, len), None);
+                    return ret_history_add(&s, None);
                 } else {
                     return ret_history_add(&op, None);
                 }

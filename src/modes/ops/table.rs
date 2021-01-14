@@ -372,6 +372,8 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("poly_div" , vec!["ipd", "ipe"], basic(&poly_div)),
         ("poly_mul" , vec!["ipm", "ipr"], basic(&poly_mul)),
 
+        ("poly_square" , vec!["ipq"], chain(vec![basic(&duplicate), basic(&poly_mul)])),
+
         ("down"     , vec!["J", "oj"], basic(&|st| st.down())),
         ("up"       , vec!["K", "ok"], basic(&|st| st.up())),
 

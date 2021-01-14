@@ -86,3 +86,11 @@ pub fn constant(x: f64) -> Op {
         stack.push(Num(x));
     })
 }
+
+pub fn chain(fs: Vec<Op>) -> Op {
+    Box::new(move |stack: &mut Stack| {
+        for f in &fs {
+            f(stack)
+        }
+    })
+}

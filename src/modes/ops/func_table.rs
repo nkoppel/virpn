@@ -22,6 +22,51 @@ fn run_times(ui: &mut Ui) {
     }
 }
 
+fn integrate_rects(ui: &mut Ui) {
+    let mut stack = ui.get_stack();
+
+    let rect = if let Some(n) = stack.pop_as_num () {n as usize} else {return};
+    let high = if let Some(n) = stack.pop_as_num () {n} else {return};
+    let low  = if let Some(n) = stack.pop_as_num () {n} else {return};
+    let f    = if let Some(f) = stack.pop_as_func() {f} else {return};
+
+    let mut num = low;
+    let delta = (high - low) / rect as f64;
+
+    let mut multipliers = Vec::new();
+    let mut inputs = Vec::new();
+
+    for i in 0..rect+1 {
+        if i == 0 || i == rect {
+            multipliers.push(Num(1.));
+        } else {
+            multipliers.push(Num(((i % 2 + 1) * 2) as f64));
+        }
+
+        inputs.push(Num(num));
+
+        num += delta;
+    }
+
+    stack.push(List(multipliers));
+    stack.push(List(inputs));
+
+    mem::drop(stack);
+
+    ui.eval(f);
+    ui.eval("* sum_list".to_string());
+
+    stack = ui.get_stack();
+
+    let n = stack.pop_as_num().unwrap();
+    stack.push(Num(n * (high - low) / (3. * rect as f64)));
+}
+
+fn integrate(ui: &mut Ui) {
+    ui.get_stack().push(Num(100000.));
+    integrate_rects(ui);
+}
+
 fn min (x: f64, _: f64, y: f64) -> bool { y > x }
 fn max (x: f64, _: f64, y: f64) -> bool { y < x }
 fn zero(_: f64, x: f64, y: f64) -> bool { (x > 0.) != (y > 0.) }
@@ -38,6 +83,9 @@ pub fn gen_func_ops() -> Vec<(String, Vec<Vec<Input>>, FuncOp)> {
         ("range_max",  vec!["irrx" ], range_solver(&min)),
         ("range_min",  vec!["irrn" ], range_solver(&max)),
         ("range_zero", vec!["irrz" ], range_solver(&zero)),
+
+        ("area",         vec!["ifa" ], Rc::new(integrate)),
+        ("area_samples", vec!["ifsa"], Rc::new(integrate_rects)),
 
         ("map_depth",  vec!["ifdm"], Rc::new(map_depth)),
         ("map"      ,  vec!["ifm" ], Rc::new(|ui: &mut Ui| {ui.get_stack().push(Num(0.)); map_depth(ui)})),
