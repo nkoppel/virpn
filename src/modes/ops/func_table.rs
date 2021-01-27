@@ -67,7 +67,7 @@ fn integrate(ui: &mut Ui) {
     integrate_rects(ui);
 }
 
-fn euler_approx(ui: &mut Ui) {
+fn euler_approx(log: bool, ui: &mut Ui) {
     let stack = ui.get_stack();
 
     let steps = if let Some(n) = stack.pop_as_num () {n as usize} else {return};
@@ -81,6 +81,7 @@ fn euler_approx(ui: &mut Ui) {
     let mut x = if let Some(n) = start.pop_as_num() {n} else {return};
 
     let delta = (endx - x) / steps as f64;
+    let mut out = Stack::new();
 
     mem::drop(stack);
 
@@ -88,10 +89,18 @@ fn euler_approx(ui: &mut Ui) {
         ui.get_stack().push(Num(x));
         ui.get_stack().push(Num(y));
         ui.eval(func.clone());
+        let slope = ui.get_stack().pop_as_num().unwrap();
+
+        if log {
+            out.push(List(vec![Num(x), Num(y), Num(slope)]));
+        }
         x += delta;
-        y += ui.get_stack().pop_as_num().unwrap() * delta;
+        y += slope * delta;
     }
 
+    if log {
+        ui.get_stack().push(List(out.into_vec()));
+    }
     ui.get_stack().push(List(vec![Num(x), Num(y)]));
 }
 
@@ -115,7 +124,8 @@ pub fn gen_func_ops() -> Vec<(String, Vec<Vec<Input>>, FuncOp)> {
         ("area",         vec!["ifa" ], Rc::new(integrate)),
         ("area_samples", vec!["ifsa"], Rc::new(integrate_rects)),
 
-        ("euler",        vec!["ife"], Rc::new(euler_approx)),
+        ("euler",        vec!["ife"] , Rc::new(|ui| euler_approx(false, ui))),
+        ("euler_log",    vec!["ifle"], Rc::new(|ui| euler_approx(true, ui))),
 
         ("map_depth",  vec!["ifdm"], Rc::new(map_depth)),
         ("map"      ,  vec!["ifm" ], Rc::new(|ui: &mut Ui| {ui.get_stack().push(Num(0.)); map_depth(ui)})),
