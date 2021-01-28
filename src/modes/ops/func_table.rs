@@ -104,8 +104,6 @@ fn euler_approx(log: bool, ui: &mut Ui) {
     ui.get_stack().push(List(vec![Num(x), Num(y)]));
 }
 
-fn min (x: f64, _: f64, y: f64) -> bool { y > x }
-fn max (x: f64, _: f64, y: f64) -> bool { y < x }
 fn zero(_: f64, x: f64, y: f64) -> bool { (x > 0.) != (y > 0.) }
 
 pub fn gen_func_ops() -> Vec<(String, Vec<Vec<Input>>, FuncOp)> {
@@ -113,12 +111,10 @@ pub fn gen_func_ops() -> Vec<(String, Vec<Vec<Input>>, FuncOp)> {
         ("run",        vec!["ifr" ], Rc::new(&run) as FuncOp),
         ("run_times",  vec!["iftr"], Rc::new(&run_times)),
 
-        ("max",        vec!["irx" ], million_solver(&min)),
-        ("min",        vec!["irn" ], million_solver(&max)),
+        ("max",        vec!["irx" ], Rc::new(|ui| optimize(true, ui))),
+        ("min",        vec!["irn" ], Rc::new(|ui| optimize(false, ui))),
         ("zero",       vec!["irz" ], million_solver(&zero)),
 
-        ("range_max",  vec!["irrx" ], range_solver(&min)),
-        ("range_min",  vec!["irrn" ], range_solver(&max)),
         ("range_zero", vec!["irrz" ], range_solver(&zero)),
 
         ("area",         vec!["ifa" ], Rc::new(integrate)),

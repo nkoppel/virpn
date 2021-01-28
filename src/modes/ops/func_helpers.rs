@@ -74,6 +74,49 @@ pub fn range_solver<'a, F>(op: &'static F) -> FuncOp
     })
 }
 
+pub fn optimize(max: bool, ui: &mut Ui) {
+    let stack = ui.get_stack();
+
+    let mut step = if let Some(n) = stack.pop_as_num () {n} else {return};
+    let mut loc  = if let Some(n) = stack.pop_as_num () {n} else {return};
+    let     f    = if let Some(f) = stack.pop_as_func() {f} else {return};
+
+    mem::drop(stack);
+
+    ui.get_stack().push(Num(loc));
+    ui.eval(f.clone());
+    let mut a = if let Some(n) = ui.get_stack().pop_as_num() {n} else {return};
+
+    let mut increase = true;
+    let mut i = 0;
+
+    while step.abs() > f64::EPSILON && i < 10000 {
+        ui.get_stack().push(Num(loc + step));
+        ui.eval(f.clone());
+        let b = if let Some(n) = ui.get_stack().pop_as_num() {n} else {return};
+
+        loc += step;
+
+        if (b < a) == max {
+            step /= -2.;
+            if i > 0 {
+                increase = false;
+            }
+        } else if increase {
+            step *= 1.5;
+        }
+
+        a = b;
+        i += 1;
+    }
+
+    ui.get_stack().push(Num(loc));
+    ui.eval(f.clone());
+    let a = if let Some(n) = ui.get_stack().pop_as_num() {n} else {return};
+
+    ui.get_stack().push(List(vec![Num(loc), Num(a)]));
+}
+
 fn depth_helper<F>(ui: &mut Ui, depth: usize, f: &mut F)
     where F: FnMut(&mut Ui)
 {
