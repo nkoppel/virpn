@@ -7,16 +7,16 @@ pub struct Number_mode {}
 impl Mode for Number_mode {
     fn get_bindings(&self) -> Vec<Vec<Input>> {
         vec![
-            vec![Character('a')],
-            vec![Character('s')],
-            vec![Character('d')],
-            vec![Character('f')],
-            vec![Character('g')],
-            vec![Character('h')],
-            vec![Character('j')],
-            vec![Character('k')],
-            vec![Character('l')],
-            vec![Character(';')],
+            vec![Character('a')], vec![Character('A')],
+            vec![Character('s')], vec![Character('S')],
+            vec![Character('d')], vec![Character('D')],
+            vec![Character('f')], vec![Character('F')],
+            vec![Character('g')], vec![Character('G')],
+            vec![Character('h')], vec![Character('H')],
+            vec![Character('j')], vec![Character('J')],
+            vec![Character('k')], vec![Character('K')],
+            vec![Character('l')], vec![Character('L')],
+            vec![Character(';')], vec![Character(':')],
             vec![Character('n')],
             vec![Character('m')],
         ]
@@ -55,26 +55,32 @@ impl Mode for Number_mode {
             let (bind, res) = ui.get_next_binding();
 
             match bind[0] {
-                Character('a') => {buffer.insert(loc, '1'); loc += 1}
-                Character('s') => {buffer.insert(loc, '2'); loc += 1}
-                Character('d') => {buffer.insert(loc, '3'); loc += 1}
-                Character('f') => {buffer.insert(loc, '4'); loc += 1}
-                Character('g') => {buffer.insert(loc, '5'); loc += 1}
-                Character('h') => {buffer.insert(loc, '6'); loc += 1}
-                Character('j') => {buffer.insert(loc, '7'); loc += 1}
-                Character('k') => {buffer.insert(loc, '8'); loc += 1}
-                Character('l') => {buffer.insert(loc, '9'); loc += 1}
-                Character(';') => {buffer.insert(loc, '0'); loc += 1}
-                Character('n') => {
-                    if loc == 0 {
-                        buffer.insert(loc, '-');
-                        loc = 1
-                    }
-                }
-                Character('m') => {
-                    if !buffer.contains('.') {
-                        buffer.insert(loc, '.');
-                        loc += 1;
+                Character(c) => {
+                    match c.to_ascii_lowercase() {
+                        'a' => {buffer.insert(loc, '1'); loc += 1}
+                        's' => {buffer.insert(loc, '2'); loc += 1}
+                        'd' => {buffer.insert(loc, '3'); loc += 1}
+                        'f' => {buffer.insert(loc, '4'); loc += 1}
+                        'g' => {buffer.insert(loc, '5'); loc += 1}
+                        'h' => {buffer.insert(loc, '6'); loc += 1}
+                        'j' => {buffer.insert(loc, '7'); loc += 1}
+                        'k' => {buffer.insert(loc, '8'); loc += 1}
+                        'l' => {buffer.insert(loc, '9'); loc += 1}
+                        ';' => {buffer.insert(loc, '0'); loc += 1}
+                        ':' => {buffer.insert(loc, '0'); loc += 1}
+                        'n' => {
+                            if loc == 0 {
+                                buffer.insert(loc, '-');
+                                loc = 1
+                            }
+                        }
+                        'm' => {
+                            if !buffer.contains('.') {
+                                buffer.insert(loc, '.');
+                                loc += 1;
+                            }
+                        }
+                        _ => return ((buffer, loc), res)
                     }
                 }
 
@@ -87,6 +93,14 @@ impl Mode for Number_mode {
                     }
                 }
                 _ => return ((buffer, loc), res)
+            }
+
+            if let Character(c) = bind[0] {
+                if c.is_ascii_uppercase() || c == ':' {
+                    ui.print_output(&buffer, loc);
+
+                    return ((buffer, loc), res);
+                }
             }
         }
     }

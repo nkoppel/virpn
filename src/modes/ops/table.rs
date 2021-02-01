@@ -293,7 +293,7 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("+"     , vec!["q", "+"        ], op_2(&|x, y| x + y)),
         ("-"     , vec!["w", "-"        ], op_2(&|x, y| x - y)),
         ("/"     , vec!["e", "/"        ], op_2(&|x, y| x / y)),
-        ("%"     , vec!["D", "E", "%"   ], op_2(&|x, y| x % y)),
+        ("%"     , vec!["E", "%"        ], op_2(&|x, y| x % y)),
         ("*"     , vec!["r", "*"        ], op_2(&|x, y| x * y)),
         ("^"     , vec!["t", "^"        ], op_2(&|x, y| x.powf(y))),
 
@@ -375,8 +375,8 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
 
         ("poly_square" , vec!["ipq"], chain(vec![basic(&duplicate), basic(&poly_mul)])),
 
-        ("down"     , vec!["J", "oj"], basic(&|st| st.down())),
-        ("up"       , vec!["K", "ok"], basic(&|st| st.up())),
+        ("down"     , vec!["oj"], basic(&|st| st.down())),
+        ("up"       , vec!["ok"], basic(&|st| st.up())),
 
         ("components", vec!["ivc"], vec2_op(&|l, a| (a.cos() * l, a.sin() * l))),
         ("heading"   , vec!["ivh"], vec2_op(&|x, y| ((x*x + y*y).sqrt(), y.atan2(x)))),
