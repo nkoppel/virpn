@@ -89,25 +89,50 @@ pub fn optimize(max: bool, ui: &mut Ui) {
 
     let mut increase = true;
     let mut i = 0;
+    let mut max_eq = f64::NEG_INFINITY;
+    let mut min_eq = f64::INFINITY;
+    let mut num_steps = 0;
 
-    while step.abs() > f64::EPSILON && i < 10000 {
+    while step.abs() >= f64::EPSILON && num_steps < 100 && i < 10000 {
         ui.get_stack().push(Num(loc + step));
         ui.eval(f.clone());
         let b = if let Some(n) = ui.get_stack().pop_as_num() {n} else {return};
 
         loc += step;
+        num_steps += 1;
 
-        if (b < a) == max {
+        if (b < a) == max && a != b {
+            if num_steps > 10 {
+                if loc > max_eq {
+                    max_eq = loc - step;
+                } else if loc < min_eq {
+                    min_eq = loc - step;
+                }
+                if step > 0. && min_eq < f64::INFINITY{
+                    loc = min_eq;
+                } else if step < 0. && max_eq > f64::NEG_INFINITY {
+                    loc = max_eq;
+                }
+                num_steps = 11;
+            } else  {
+                num_steps = 0;
+            }
+
             step /= -2.;
             if i > 0 {
                 increase = false;
             }
         } else if increase {
+            num_steps = 0;
             step *= 1.5;
         }
 
         a = b;
         i += 1;
+    }
+
+    if max_eq > f64::NEG_INFINITY && min_eq < f64::INFINITY {
+        loc = (max_eq + min_eq) / 2.;
     }
 
     ui.get_stack().push(Num(loc));
