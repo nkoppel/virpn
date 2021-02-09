@@ -204,7 +204,7 @@ impl Stack {
 
     pub fn to_string(&self, width: usize, height: usize) -> String {
         let strs: Vec<String> =
-            self.curr.iter() .map(|x| x.to_string(0, width, height)).collect();
+            self.curr.iter().map(|x| x.to_string(0, width, height)).collect();
 
         strs.join("\n")
     }
@@ -229,7 +229,7 @@ impl Item {
                     }
                 }
 
-                strs = strs.into_iter().rev().collect();
+                strs.reverse();
 
                 let base_indent = " ".repeat(indent);
 
