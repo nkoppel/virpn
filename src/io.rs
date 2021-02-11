@@ -95,6 +95,10 @@ impl<T> Bindings<T> where T: Clone {
         self.tree.insert(bind.iter(), output);
     }
 
+    pub fn get_bind(&self) -> Vec<Input> {
+        self.out_buf.clone()
+    }
+
     pub fn add(&mut self, i: Input) -> Option<T> {
         self.buf.push(i.clone());
 

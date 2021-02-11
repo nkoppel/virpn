@@ -1,9 +1,10 @@
-pub use std::collections::{HashMap, VecDeque};
+pub use std::collections::HashMap;
 pub use std::rc::Rc;
 pub use std::cell::Cell;
 
 pub use crate::stack::Stack;
 pub use crate::stack::{Item, Item::*};
+pub use crate::data::*;
 pub use crate::io::*;
 
 pub use pancurses::{Input, Input::*, Window};
@@ -16,19 +17,6 @@ pub use std::mem;
 // pub mod var;
 // pub mod history;
 // pub mod line_edit;
-
-pub type State = HashMap<String, Data>;
-
-pub enum Data {
-    Map(State),
-    Array(Vec<Data>),
-    Float(f64),
-    Bool(bool),
-    Int(i64),
-    Uint(u64),
-    Str(String),
-    Itm(Item)
-}
 
 pub use Data::*;
 
@@ -46,7 +34,7 @@ pub trait Mode {
 
     fn eval_operators(&mut self, run: &mut Ui, op: &str);
 
-    fn exit(&mut self);
+    fn ret(&mut self, state: &mut State) -> String;
 }
 
 pub enum Message {
@@ -56,7 +44,7 @@ pub enum Message {
     EscBind(Vec<Input>),
     PressKeys(Vec<Input>),
     Print(String, usize),
-    Return(String),
+    Return,
     NextKey(bool),
 }
 
@@ -199,6 +187,26 @@ impl Ui {
         }
     }
 
+    fn mode_return(&mut self) {
+        if let Some((m, mut state, ..)) = self.callstack.pop() {
+            let mut mode = self.modes.remove(&m).unwrap();
+            let s = mode.ret(&mut state);
+
+            self.modes.insert(m, mode);
+
+            if !s.is_empty() {
+                if let Some((_, state, ..)) = self.callstack.last_mut() {
+                    state.insert("return".to_string(), Str(s));
+                } else {
+                    self.cursor = s.len();
+                    self.print = s.clone();
+
+                    self.eval(s);
+                }
+            }
+        }
+    }
+
     pub fn eval_messages(&mut self, messages: Vec<Message>) {
         for m in messages {
             match m {
@@ -251,16 +259,8 @@ impl Ui {
                     self.print = l;
                     self.show();
                 }
-                Return(s) => {
-                    self.callstack.pop();
-
-                    if !s.is_empty() {
-                        if let Some((_, state, ..)) = self.callstack.last_mut() {
-                            state.insert("return".to_string(), Str(s));
-                        } else {
-                            self.eval(s);
-                        }
-                    }
+                Return => {
+                    self.mode_return();
                 }
                 NextKey(b) => {
                     self.nextkey = b;
@@ -270,7 +270,29 @@ impl Ui {
     }
 
     pub fn eval_key(&mut self, key: Input) {
+        if let Some((esc, m)) = self.get_bindings().add(key) {
+            let bind = self.get_bindings().get_bind();
 
+            if esc {
+                self.escape(&m);
+            }
+            if !self.callstack.is_empty() {
+                let (m2, mut state, binds, wraps) = self.callstack.pop().unwrap();
+
+                if m == m2 {
+                    let mut mode = self.modes.remove(&m).unwrap();
+                    self.eval_messages(mode.eval_binding(&mut state, bind));
+
+                    self.modes.insert(m, mode);
+                    self.callstack.push((m2, state, binds, wraps));
+                } else {
+                    self.eval_messages(vec![
+                        Return,
+                        CallByBind(bind, HashMap::new())
+                    ]);
+                }
+            }
+        }
     }
 
     pub fn show(&self) {
