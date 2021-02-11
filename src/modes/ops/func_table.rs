@@ -104,6 +104,26 @@ fn euler_approx(log: bool, ui: &mut Ui) {
     ui.get_stack().push(List(vec![Num(x), Num(y)]));
 }
 
+fn derivative_at(ui: &mut Ui) {
+    let stack = ui.get_stack();
+
+    let x = if let Some(n) = stack.pop_as_num () {n} else {return};
+    let f = if let Some(f) = stack.pop_as_func() {f} else {return};
+
+    let d = f64::EPSILON * 1000000. * x;
+    let x2 = x + d;
+
+    ui.get_stack().push(Num(x));
+    ui.eval(f.clone());
+    let y = ui.get_stack().pop_as_num().unwrap();
+
+    ui.get_stack().push(Num(x2));
+    ui.eval(f.clone());
+    let y2 = ui.get_stack().pop_as_num().unwrap();
+
+    ui.get_stack().push(Num((y2 - y) / d));
+}
+
 fn zero(_: f64, x: f64, y: f64) -> bool { (x > 0.) != (y > 0.) }
 
 pub fn gen_func_ops() -> Vec<(String, Vec<Vec<Input>>, FuncOp)> {
@@ -117,8 +137,8 @@ pub fn gen_func_ops() -> Vec<(String, Vec<Vec<Input>>, FuncOp)> {
 
         ("range_zero", vec!["irrz" ], range_solver(&zero)),
 
-        ("area",         vec!["ifa" ], Rc::new(integrate)),
-        ("area_samples", vec!["ifsa"], Rc::new(integrate_rects)),
+        ("area",  vec!["ifa"], Rc::new(integrate)),
+        ("slope", vec!["ifs"], Rc::new(derivative_at)),
 
         ("euler",        vec!["ife"] , Rc::new(|ui| euler_approx(false, ui))),
         ("euler_log",    vec!["ifle"], Rc::new(|ui| euler_approx(true, ui))),
