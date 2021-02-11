@@ -1,22 +1,22 @@
 use crate::modes::*;
 
-use crate::modes::{
-    number::Number_mode,
-    ops::Op_mode,
-    var::Var_mode,
-    history::History_mode,
-    line_edit::Line_edit_mode
-};
+// use crate::modes::{
+    // number::Number_mode,
+    // ops::Op_mode,
+    // var::Var_mode,
+    // history::History_mode,
+    // line_edit::Line_edit_mode
+// };
 
 use pancurses::{initscr, endwin};
 
 fn new_ui(window: Window) -> Ui {
     Ui::build(window, vec![
-        Box::new(Number_mode{}),
-        Box::new(Op_mode::new()),
-        Box::new(Var_mode::new()),
-        Box::new(History_mode::new()),
-        Box::new(Line_edit_mode{}),
+        // Box::new(Number_mode{}),
+        // Box::new(Op_mode::new()),
+        // Box::new(Var_mode::new()),
+        // Box::new(History_mode::new()),
+        // Box::new(Line_edit_mode{}),
     ])
 }
 

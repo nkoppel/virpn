@@ -1,10 +1,10 @@
 mod io;
 mod stack;
 mod modes;
-mod interface;
+// mod interface;
 
-use crate::interface::*;
+// use crate::interface::*;
 
 fn main() {
-    history_interface();
+    // history_interface();
 }
