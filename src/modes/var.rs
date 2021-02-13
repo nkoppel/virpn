@@ -73,65 +73,76 @@ impl Mode for Var_mode {
                 }
             }
         }
-
-        ui.insert_mode(
-            self.get_name(),
-            Box::new(mem::replace(self, Var_mode::new()))
-        );
     }
 
-    fn eval_bindings(&self, mut ui: Ui_helper, _: HashMap<&str, &str>)
-        -> ModeRes<(String, usize)>
+    fn eval_binding(&mut self, state: &mut State, bind: Vec<Input>)
+        -> Vec<Message>
     {
-        let mut tmp = ui.get_next_binding();
+        let mut msg = Vec::new();
+        let mut setting = Data::unwrap_bool_or(state.get("setting"), false);
+        let mut name = Data::unwrap_bool_or(state.get("name"), false);
 
-        if let (_, Some(_)) = tmp {
-            return ((String::new(), 0), tmp.1);
-        }
+        msg.push(NextKey(false));
 
-        match tmp.0[0] {
-            Character('Y') => {
-                ui.print_output("del_yank", 8);
-                return (("del_yank".to_string(), 8), None)
-            },
-            Character('P') => {
-                ui.print_output("del_put", 7);
-                return (("del_put" .to_string(), 7), None)
-            },
-            Character('y') => {
-                ui.print_output("yank", 4);
-                return (("yank".to_string(), 4), None)
-            },
-            Character('p') => {
-                ui.print_output("put", 3);
-                return (("put" .to_string(), 3), None)
-            },
-            Character('z') | Character('v') => {
-                let setting = tmp.0 == vec![Character('z')];
-                let mut op = if setting {"set "} else {"get "}.to_string();
-
-                ui.print_output(&op, 4);
-
-                for c in VAR_NAMES.chars() {
-                    ui.add_escape_binding(vec![Character(c)]);
-                }
-
-                tmp = ui.get_next_binding();
-
-                if let (_, Some(_)) = tmp {
-                    return ((String::new(), 0), tmp.1);
-                }
-
-                if let Character(c) = tmp.0[0] {
+        if name {
+            if let Character(c) = bind[0] {
+                if VAR_NAMES.contains(c) {
+                    let mut op = if setting {"set "} else {"get "}.to_string();
                     op.push(c);
-                    ui.print_output(&op, 5);
 
-                    return ((op, 5), None);
-                } else {
-                    panic!()
+                    msg.push(Print(op.clone(), 5));
+                    name = false;
+
+                    state.insert("op".to_string(), Str(op));
                 }
             }
-            _ => panic!()
+
+            msg.push(Return);
+        } else {
+            match bind[0] {
+                Character('Y') => {
+                    let op = "del_yank".to_string();
+                    state.insert("op".to_string(), Str(op.clone()));
+                    msg.push(Print(op, 8));
+                    msg.push(Return);
+                },
+                Character('P') => {
+                    let op = "del_put".to_string();
+                    state.insert("op".to_string(), Str(op.clone()));
+                    msg.push(Print(op, 7));
+                    msg.push(Return);
+                },
+                Character('y') => {
+                    state.insert("op".to_string(), Str("yank".to_string()));
+                    msg.push(Print("yank".to_string(), 4));
+                    msg.push(Return);
+                },
+                Character('p') => {
+                    state.insert("op".to_string(), Str("put".to_string()));
+                    msg.push(Print("put".to_string(), 3));
+                    msg.push(Return);
+                },
+                Character('z') | Character('v') => {
+                    let set = bind[0] == Character('z');
+                    let op = if set {"set"} else {"get"}.to_string();
+
+                    msg.push(Print(op, 3));
+                    msg.push(NextKey(true));
+
+                    name = true;
+                    setting = set;
+                }
+                _ => panic!()
+            }
         }
+
+        state.insert("setting".to_string(), Bool(setting));
+        state.insert("name".to_string(), Bool(name));
+
+        msg
+    }
+
+    fn ret(&mut self, state: &mut State) -> String {
+        Data::unwrap_string_or(state.get("op"), String::new())
     }
 }

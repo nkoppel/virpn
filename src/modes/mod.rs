@@ -12,9 +12,9 @@ pub use regex::Regex;
 
 pub use std::mem;
 
-// pub mod number;
-// pub mod ops;
-// pub mod var;
+pub mod number;
+pub mod ops;
+pub mod var;
 // pub mod history;
 // pub mod line_edit;
 
@@ -44,7 +44,9 @@ pub enum Message {
     EscBind(Vec<Input>),
     PressKeys(Vec<Input>),
     Print(String, usize),
+    AllowReplace(bool),
     Return,
+    Exit,
     NextKey(bool),
 }
 
@@ -54,31 +56,31 @@ pub struct Ui {
     operator_regexes: Vec<(Regex, String)>,
     bindings: Bindings<(bool, String)>,
     modes: HashMap<String, Box<dyn Mode>>,
+    pub exit: bool,
     print: String,
     cursor: usize,
     stack: Stack,
-    callstack: Vec<(String, State, Bindings<(bool, String)>, (String, String))>,
+    callstack: Vec<(String, State, bool, Bindings<(bool, String)>, (String, String))>,
     nextkey: bool,
-    window: Window,
 }
 
 impl Ui {
-    pub fn new(window: Window) -> Self {
+    pub fn new() -> Self {
         Ui {
             operator_regexes: Vec::new(),
             bindings: Bindings::new(),
+            exit: false,
             modes: HashMap::new(),
             print: String::new(),
             cursor: 0,
             stack: Stack::new(),
             callstack: Vec::new(),
             nextkey: false,
-            window,
         }
     }
 
-    pub fn build(window: Window, modes: Vec<Box<dyn Mode>>) -> Self {
-        let mut out = Ui::new(window);
+    pub fn build(modes: Vec<Box<dyn Mode>>) -> Self {
+        let mut out = Ui::new();
         let mut binds = Vec::new();
 
         for mode in modes.into_iter() {
@@ -134,9 +136,10 @@ impl Ui {
     pub fn eval(&mut self, exp: String) {
         let ops = self.tokenize(&exp);
 
-        for (mode, op) in ops {
-            if let Some(mut mode) = self.modes.remove(&mode) {
+        for (m, op) in ops {
+            if let Some(mut mode) = self.modes.remove(&m) {
                 mode.eval_operators(self, &op);
+                self.modes.insert(m, mode);
             } else {
                 break;
             }
@@ -159,32 +162,26 @@ impl Ui {
     }
 
     fn get_bindings<'a>(&'a mut self) -> &'a mut Bindings<(bool, String)> {
-        if let Some((_, _, b, _)) = self.callstack.last_mut() {
+        if let Some((.., b, _)) = self.callstack.last_mut() {
             b
         } else {
             &mut self.bindings
         }
     }
 
-    fn escape(&mut self, mode: &str) {
-        while let Some((m, ..)) = self.callstack.last() {
-            if m != mode {
-                self.callstack.pop();
-            } else {
-                break;
-            }
-        }
-    }
-
-    fn run_mode(&mut self, bind: Vec<Input>) {
-        if let Some((m, mut state, binds, wrap)) = self.callstack.pop() {
+    fn run_mode(&mut self, bind: Vec<Input>) -> bool {
+        if let Some((m, mut state, repl, binds, wrap)) = self.callstack.pop() {
             let mut mode = self.modes.remove(&m).unwrap();
-
-            self.eval_messages(mode.eval_binding(&mut state, bind));
+            let messages = mode.eval_binding(&mut state, bind);
 
             self.modes.insert(m.clone(), mode);
-            self.callstack.push((m, state, binds, wrap));
+            self.callstack.push((m, state, repl, binds, wrap));
+
+            self.eval_messages(messages);
+
+            return true;
         }
+        false
     }
 
     fn mode_return(&mut self) {
@@ -194,15 +191,26 @@ impl Ui {
 
             self.modes.insert(m, mode);
 
-            if !s.is_empty() {
-                if let Some((_, state, ..)) = self.callstack.last_mut() {
-                    state.insert("return".to_string(), Str(s));
-                } else {
-                    self.cursor = s.len();
-                    self.print = s.clone();
+            if let Some((_, state, ..)) = self.callstack.last_mut() {
+                state.insert("return".to_string(), Str(s));
+                mem::drop(state);
 
-                    self.eval(s);
-                }
+                self.run_mode(Vec::new());
+            } else {
+                self.cursor = s.len();
+                self.print = s.clone();
+
+                self.eval(s);
+            }
+        }
+    }
+
+    fn escape(&mut self, mode: &str) {
+        while let Some((m, ..)) = self.callstack.last() {
+            if m != mode {
+                self.mode_return();
+            } else {
+                break;
             }
         }
     }
@@ -212,7 +220,7 @@ impl Ui {
             match m {
                 Call(mode, state) => {
                     let binds = self.get_bindings().clone();
-                    self.callstack.push((mode, state, binds, (String::new(), String::new())));
+                    self.callstack.push((mode, state, true, binds, (String::new(), String::new())));
 
                     let (l, r) = self.get_wrap();
 
@@ -257,10 +265,18 @@ impl Ui {
                     l += &r;
 
                     self.print = l;
-                    self.show();
+                }
+                AllowReplace(b) => {
+                    if let Some((_, _, repl, ..)) = self.callstack.last_mut() {
+                        *repl = b;
+                    }
                 }
                 Return => {
                     self.mode_return();
+                    self.nextkey = false;
+                }
+                Exit => {
+                    self.exit = true;
                 }
                 NextKey(b) => {
                     self.nextkey = b;
@@ -270,33 +286,37 @@ impl Ui {
     }
 
     pub fn eval_key(&mut self, key: Input) {
-        if let Some((esc, m)) = self.get_bindings().add(key) {
+        if self.nextkey {
+            self.run_mode(vec![key]);
+        } else if let Some((esc, m)) = self.get_bindings().add(key) {
             let bind = self.get_bindings().get_bind();
 
             if esc {
                 self.escape(&m);
             }
             if !self.callstack.is_empty() {
-                let (m2, mut state, binds, wraps) = self.callstack.pop().unwrap();
+                let (m2, _, repl, ..) = self.callstack.last().unwrap();
 
-                if m == m2 {
-                    let mut mode = self.modes.remove(&m).unwrap();
-                    self.eval_messages(mode.eval_binding(&mut state, bind));
-
-                    self.modes.insert(m, mode);
-                    self.callstack.push((m2, state, binds, wraps));
+                if m == *m2 {
+                    self.run_mode(bind);
                 } else {
+                    if *repl {
+                        self.mode_return();
+                    }
                     self.eval_messages(vec![
-                        Return,
                         CallByBind(bind, HashMap::new())
                     ]);
                 }
+            } else {
+                self.eval_messages(vec![
+                    CallByBind(bind, HashMap::new())
+                ]);
             }
         }
     }
 
-    pub fn show(&self) {
-        print_stack(&self.window, &self.stack);
-        print_command(&self.window, &self.print, self.cursor);
+    pub fn show(&self, window: &Window) {
+        print_stack(&window, &self.stack);
+        print_command(&window, &self.print, self.cursor);
     }
 }

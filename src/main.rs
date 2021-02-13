@@ -5,7 +5,38 @@ mod data;
 // mod interface;
 
 // use crate::interface::*;
+use crate::modes::*;
+use pancurses::{initscr, endwin};
+
+use crate::modes::{
+    number::Number_mode,
+    ops::Op_mode,
+    var::Var_mode,
+    // history::History_mode,
+    // line_edit::Line_edit_mode
+};
+
+fn new_ui() -> Ui {
+    Ui::build(vec![
+        Box::new(Number_mode{}),
+        Box::new(Op_mode::new()),
+        Box::new(Var_mode::new()),
+        // Box::new(History_mode::new()),
+        // Box::new(Line_edit_mode{}),
+    ])
+}
 
 fn main() {
     // history_interface();
+    let window = initscr();
+    let mut ui = new_ui();
+
+    window.keypad(true);
+
+    while !ui.exit {
+        ui.show(&window);
+        ui.eval_key(window.getch().unwrap());
+    }
+
+    endwin();
 }
