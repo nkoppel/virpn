@@ -128,7 +128,7 @@ impl<T> Bindings<T> where T: Clone {
             }
         }
 
-        panic!();
+        panic!("Unknown binding: {:?}", v);
     }
 
     pub fn read(&mut self, window: &Window)

@@ -15,7 +15,7 @@ pub use std::mem;
 pub mod number;
 pub mod ops;
 pub mod var;
-// pub mod history;
+pub mod history;
 // pub mod line_edit;
 
 pub use Data::*;
@@ -37,6 +37,7 @@ pub trait Mode {
     fn ret(&mut self, state: &mut State) -> String;
 }
 
+#[derive(Clone, Debug)]
 pub enum Message {
     Call(String, State),
     CallByBind(Vec<Input>, State),
@@ -184,7 +185,7 @@ impl Ui {
         false
     }
 
-    fn mode_return(&mut self) {
+    fn mode_return(&mut self, call: bool) {
         if let Some((m, mut state, ..)) = self.callstack.pop() {
             let mut mode = self.modes.remove(&m).unwrap();
             let s = mode.ret(&mut state);
@@ -195,11 +196,10 @@ impl Ui {
                 state.insert("return".to_string(), Str(s));
                 mem::drop(state);
 
-                self.run_mode(Vec::new());
+                if call {
+                    self.run_mode(Vec::new());
+                }
             } else {
-                self.cursor = s.len();
-                self.print = s.clone();
-
                 self.eval(s);
             }
         }
@@ -208,7 +208,7 @@ impl Ui {
     fn escape(&mut self, mode: &str) {
         while let Some((m, ..)) = self.callstack.last() {
             if m != mode {
-                self.mode_return();
+                self.mode_return(false);
             } else {
                 break;
             }
@@ -229,8 +229,8 @@ impl Ui {
                     self.nextkey = false;
                 }
                 CallByBind(bind, state) => {
-                    let mut binds = self.get_bindings().clone();
-                    let (b, (esc, m)) = binds.read_from_vec(&bind);
+                    let (b, (esc, m)) =
+                        self.get_bindings().read_from_vec(&bind);
 
                     if esc {
                         self.escape(&m);
@@ -272,7 +272,7 @@ impl Ui {
                     }
                 }
                 Return => {
-                    self.mode_return();
+                    self.mode_return(true);
                     self.nextkey = false;
                 }
                 Exit => {
@@ -301,7 +301,7 @@ impl Ui {
                     self.run_mode(bind);
                 } else {
                     if *repl {
-                        self.mode_return();
+                        self.mode_return(true);
                     }
                     self.eval_messages(vec![
                         CallByBind(bind, HashMap::new())
@@ -313,6 +313,35 @@ impl Ui {
                 ]);
             }
         }
+    }
+
+    pub fn call_history(&mut self) {
+        if self.callstack.is_empty() {
+            self.callstack.push((
+                "history".to_string(),
+                HashMap::new(),
+                false,
+                self.bindings.clone(),
+                (String::new(), String::new())
+            ));
+
+            self.eval_messages(vec![
+                EscBind(vec![KeyUp]),
+                EscBind(vec![KeyDown]),
+                EscBind(bind_from_str("u")),
+                EscBind(bind_from_str("R")),
+                EscBind(bind_from_str(" ")),
+                EscBind(bind_from_str("\n")),
+                EscBind(bind_from_str("Q")),
+            ])
+        }
+    }
+
+    pub fn debug_show(&self) {
+        println!("{:?}", self.callstack.iter().map(|(n, ..)| n).collect::<Vec<_>>());
+        println!("{:?}", self.stack);
+        println!("{}, {:?}", self.cursor, self.print);
+        println!();
     }
 
     pub fn show(&self, window: &Window) {
