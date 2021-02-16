@@ -1,7 +1,21 @@
 use crate::modes::*;
 
 #[allow(non_camel_case_types)]
-pub struct Line_edit_mode {} 
+pub struct Line_edit_mode {
+    loc: usize,
+    strs: Vec<String>,
+    strs_hist: Vec<(usize, Vec<String>)>,
+} 
+
+impl Line_edit_mode {
+    pub fn new() -> Self {
+        Self {
+            loc: 0,
+            strs: Vec::new(),
+            strs_hist: Vec::new(),
+        }
+    }
+}
 
 fn find_matching_paren(s: &str) -> Option<usize> {
     let mut chars = s.char_indices();
@@ -28,7 +42,7 @@ fn find_matching_paren(s: &str) -> Option<usize> {
     None
 }
 
-fn tokenize_rec(ui: &mut Ui_helper, ops: &str) -> Vec<(String, String)> {
+fn tokenize_rec(ui: &mut Ui, ops: &str) -> Vec<(String, String)> {
     let mut out = Vec::new();
 
     for (mode, op) in ui.tokenize(ops) {
@@ -54,7 +68,7 @@ impl Mode for Line_edit_mode {
     }
 
     fn get_operator_regex(&self) -> Regex {
-        Regex::new(r"^\(.*\)|^\[.*\]").unwrap()
+        Regex::new(r"^\(.*\)|^\[.*\]|^tokenize_rec .*").unwrap()
     }
 
     fn get_name(&self) -> String {
@@ -62,9 +76,15 @@ impl Mode for Line_edit_mode {
     }
 
     fn eval_operators(&mut self, ui: &mut Ui, op: &str) {
-        ui.insert_mode(self.get_name(), Box::new(Line_edit_mode{}));
+        ui.insert_mode(self.get_name(), Box::new(Line_edit_mode::new()));
 
-        if let Some(m) = find_matching_paren(op) {
+        if op[0..12] == *"tokenize_rec" {
+            self.strs = tokenize_rec(ui, &op[13..])
+                .into_iter().map(|(_, x)| x).collect();
+
+            self.strs_hist.clear();
+            self.loc = self.strs.len();
+        } else if let Some(m) = find_matching_paren(op) {
             if &op[0..1] == "(" {
                 ui.get_stack().push(Func(op[1..m - 1].trim().to_string()));
 
@@ -83,139 +103,152 @@ impl Mode for Line_edit_mode {
         }
     }
 
-    fn eval_bindings(&self, mut ui: Ui_helper, init: HashMap<&str, &str>)
-        -> ModeRes<(String, usize)>
+    fn eval_binding(&mut self, state: &mut State, bind: Vec<Input>)
+        -> Vec<Message>
     {
-        ui.add_escape_binding(vec![KeyLeft]);
-        ui.add_escape_binding(vec![KeyRight]);
-        ui.add_escape_binding(vec![KeyBackspace]);
-        ui.add_escape_binding(vec![KeyDC]);
-        ui.add_escape_binding(vec![Character('\n')]);
-        ui.add_escape_binding(vec![Character(' ')]);
+        let mut msg = Vec::new();
+        let mut ret = false;
 
-        ui.add_escape_binding(bind_from_str("I"));
-        ui.add_escape_binding(bind_from_str("u"));
-        ui.add_escape_binding(bind_from_str("ili"));
-        ui.add_escape_binding(bind_from_str("ifi"));
-        ui.add_escape_binding(bind_from_str("("));
-        ui.add_escape_binding(bind_from_str("["));
+        msg.push(AllowReplace(false));
 
-        let strs =
-            if let Some(i) = init.get("text") {
-                tokenize_rec(&mut ui, &i[..])
+        msg.push(EscBind(vec![KeyLeft]));
+        msg.push(EscBind(vec![KeyRight]));
+        msg.push(EscBind(vec![KeyBackspace]));
+        msg.push(EscBind(vec![KeyDC]));
+        msg.push(EscBind(vec![Character('\n')]));
+        msg.push(EscBind(vec![Character(' ')]));
+
+        msg.push(EscBind(bind_from_str("I")));
+        msg.push(EscBind(bind_from_str("u")));
+        msg.push(EscBind(bind_from_str("ili")));
+        msg.push(EscBind(bind_from_str("ifi")));
+        msg.push(EscBind(bind_from_str("(")));
+        msg.push(EscBind(bind_from_str("[")));
+        msg.push(EscBind(bind_from_str(")")));
+        msg.push(EscBind(bind_from_str("]")));
+
+        if let Some(Str(i)) = state.remove("init") {
+            msg.push(Eval(format!("tokenize_rec {}", i)));
+            
+            if bind.is_empty() {
+                msg.push(PressKeys(bind_from_str("I")));
             } else {
-                Vec::new()
-            };
-
-        let mut strs: Vec<_> = strs.into_iter().map(|(_, x)| x).collect();
-        let mut strs_hist = Vec::new();
-        let mut idx = strs.len();
-        let mut inputs = Vec::new();
-
-        let (bind, _) = ui.get_next_binding();
-
-        if strs.is_empty() {
-            if bind == bind_from_str("[") || bind == bind_from_str("ili") {
-                strs = vec!["[".to_string(), "]".to_string()];
-                idx = 1;
+                msg.push(PressKeys(bind));
             }
-            else if bind == bind_from_str("(") || bind == bind_from_str("ifi") {
-                strs = vec!["(".to_string(), ")".to_string()];
-                idx = 1;
-            }
+
+            return msg;
         }
 
-        loop {
-            let mut before = strs[..idx].join(" ");
-            let mut after  = strs[idx..].join(" ");
-            let full = strs.join(" ");
-
-            if !before.is_empty() {before.push(' ')}
-            if !after .is_empty() {after .insert(0, ' ')}
-
-            ui.print_output(&full, before.len());
-            ui.set_surrounding_text((before, after));
-
-            let out = ui.call_mode_by_next_binding(inputs);
-            inputs = Vec::new();
-
-            let ((_, s, _, _), _) = &out;
-
-            if !s.is_empty() {
-                strs_hist.push((idx, strs.clone()));
-                strs.insert(idx, s.clone());
-                idx += 1;
+        if bind.is_empty() {
+            if let Some(Str(op)) = state.remove("return") {
+                self.strs_hist.push((self.loc, self.strs.clone()));
+                self.strs.insert(self.loc, op);
+                self.loc += 1;
             }
-
-            match out {
-                ((.., true), Some(b)) => {
-                    if b == vec![KeyLeft] {
-                        if idx > 0 {
-                            idx -= 1;
-                        }
-                    } else if b == vec![KeyRight] {
-                        if idx < strs.len() {
-                            idx += 1;
-                        }
-                    } else if b == vec![KeyBackspace] {
-                        strs_hist.push((idx, strs.clone()));
-                        if idx > 0 {
-                            idx -= 1;
-                            let tmp = strs.remove(idx);
-
-                            if (&tmp[..] == "(" &&
-                                strs.get(idx) == Some(&")".to_string())) ||
-                               (&tmp[..] == "[" &&
-                                strs.get(idx) == Some(&"]".to_string()))
-                            {
-                                strs.remove(idx);
-                            }
-                        } else if strs.is_empty() {
-                            ui.print_output("", 0);
-                            return ((String::new(), 0), None);
-                        }
-                    } else if b == vec![KeyDC] {
-                        strs_hist.push((idx, strs.clone()));
-                        if idx < strs.len() {
-                            strs.remove(idx);
-                        } else if strs.is_empty() {
-                            ui.print_output("", 0);
-                            return ((String::new(), 0), None);
-                        }
-                    } else if b == bind_from_str("\n") {
-                        let tmp  = strs.join(" ");
-                        let len = tmp.len();
-
-                        return ((tmp, len), None);
-                    } else if b == bind_from_str("(") ||
-                              b == bind_from_str("ifi")
-                    {
-                        strs_hist.push((idx, strs.clone()));
-                        strs.insert(idx, "(".to_string());
-                        idx += 1;        
-                        strs.insert(idx, ")".to_string());
-                    } else if b == bind_from_str("[") ||
-                              b == bind_from_str("ili")
-                    {
-                        strs_hist.push((idx, strs.clone()));
-                        strs.insert(idx, "[".to_string());
-                        idx += 1;        
-                        strs.insert(idx, "]".to_string());
-                    } else if b == bind_from_str("u") {
-                        if let Some((i, s)) = strs_hist.pop() {
-                            idx = i;
-                            strs = s;
-                        }
-                    } else if b != bind_from_str(" ") &&
-                              b != bind_from_str("I")
-                    {
-                        return ((String::new(), 0), Some(b));
+        } else if bind == bind_from_str("(") ||
+                  bind == bind_from_str("ifi")
+        {
+            self.strs_hist.push((self.loc, self.strs.clone()));
+            self.strs.insert(self.loc, "(".to_string());
+            self.loc += 1;
+            self.strs.insert(self.loc, ")".to_string());
+        } else if bind == bind_from_str("[") ||
+                  bind == bind_from_str("ili")
+        {
+            self.strs_hist.push((self.loc, self.strs.clone()));
+            self.strs.insert(self.loc, "[".to_string());
+            self.loc += 1;
+            self.strs.insert(self.loc, "]".to_string());
+        } else if bind.len() == 1 {
+            match bind[0] {
+                KeyLeft => {
+                    if self.loc > 0 {
+                        self.loc -= 1;
                     }
                 }
-                ((.., true), res) => return ((String::new(), 0), res),
-                (_, Some(binds)) => inputs = binds.clone(),
+                KeyRight => {
+                    if self.loc < self.strs.len() {
+                        self.loc += 1;
+                    }
+                }
+                KeyDC => {
+                    if self.loc < self.strs.len() {
+                        self.strs.remove(self.loc);
+                        self.strs_hist.push((self.loc, self.strs.clone()));
+                    } else if self.strs.is_empty() {
+                        ret = true;
+                    }
+                }
+                KeyBackspace => {
+                    if self.loc > 0 {
+                        self.loc -= 1;
+                        let tmp = self.strs.remove(self.loc);
+
+                        if (&tmp[..] == "(" &&
+                            self.strs.get(self.loc) == Some(&")".to_string())) ||
+                           (&tmp[..] == "[" &&
+                            self.strs.get(self.loc) == Some(&"]".to_string()))
+                        {
+                            self.strs.remove(self.loc);
+                        }
+
+                        self.strs_hist.push((self.loc, self.strs.clone()));
+                    } else if self.strs.is_empty() {
+                        ret = true;
+                    }
+                }
+                Character('\n') => {
+                    ret = true;
+                }
+                Character(')') => {
+                    self.strs_hist.push((self.loc, self.strs.clone()));
+                    self.strs.insert(self.loc, ")".to_string());
+                    self.loc += 1;
+                    self.strs_hist.push((self.loc, self.strs.clone()));
+                }
+                Character(']') => {
+                    self.strs_hist.push((self.loc, self.strs.clone()));
+                    self.strs.insert(self.loc, "]".to_string());
+                    self.loc += 1;
+                    self.strs_hist.push((self.loc, self.strs.clone()));
+                }
+                Character('u') => {
+                    if let Some((l, s)) = self.strs_hist.pop() {
+                        self.loc = l;
+                        self.strs = s;
+                    }
+                }
                 _ => {}
             }
         }
+
+        let before = self.strs[..self.loc].join(" ");
+        let after  = self.strs[self.loc..].join(" ");
+
+        msg.push(Print(
+            format!("{} {}", before, after),
+            if before.len() == 0 {
+                0
+            } else {
+                before.len() + 1
+            }
+        ));
+        msg.push(WrapText(before + " ", " ".to_string() + &after));
+
+        if ret {
+            msg.push(Return);
+        }
+
+        msg
+    }
+
+    fn ret(&mut self, _: &mut State) -> String {
+        let out = self.strs.join(" ");
+
+        self.loc = 0;
+        self.strs.clear();
+        self.strs_hist.clear();
+
+        out
     }
 }
