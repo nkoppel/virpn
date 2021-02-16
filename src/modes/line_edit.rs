@@ -78,7 +78,7 @@ impl Mode for Line_edit_mode {
     fn eval_operators(&mut self, ui: &mut Ui, op: &str) {
         ui.insert_mode(self.get_name(), Box::new(Line_edit_mode::new()));
 
-        if op[0..12] == *"tokenize_rec" {
+        if op.len() >= 13 && op[0..12] == *"tokenize_rec" {
             self.strs = tokenize_rec(ui, &op[13..])
                 .into_iter().map(|(_, x)| x).collect();
 
