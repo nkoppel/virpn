@@ -13,7 +13,7 @@ use crate::modes::{
     ops::Op_mode,
     var::Var_mode,
     history::History_mode,
-    // line_edit::Line_edit_mode
+    line_edit::Line_edit_mode
 };
 
 fn new_ui() -> Ui {
@@ -22,7 +22,7 @@ fn new_ui() -> Ui {
         Box::new(Op_mode::new()),
         Box::new(Var_mode::new()),
         Box::new(History_mode::new()),
-        // Box::new(Line_edit_mode{}),
+        Box::new(Line_edit_mode::new()),
     ])
 }
 

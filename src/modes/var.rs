@@ -73,6 +73,12 @@ impl Mode for Var_mode {
                 }
             }
         }
+
+        ui.insert_mode(
+            "var".to_string(),
+            Box::new(mem::replace(self, Var_mode::new()))
+        );
+
     }
 
     fn eval_binding(&mut self, state: &mut State, bind: Vec<Input>)

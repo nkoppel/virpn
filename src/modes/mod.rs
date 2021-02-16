@@ -16,7 +16,7 @@ pub mod number;
 pub mod ops;
 pub mod var;
 pub mod history;
-// pub mod line_edit;
+pub mod line_edit;
 
 pub use Data::*;
 
@@ -44,6 +44,7 @@ pub enum Message {
     WrapText(String, String),
     EscBind(Vec<Input>),
     PressKeys(Vec<Input>),
+    Eval(String),
     Print(String, usize),
     AllowReplace(bool),
     Return,
@@ -134,13 +135,16 @@ impl Ui {
         out
     }
 
+    pub fn insert_mode(&mut self, name: String, mode: Box<dyn Mode>) {
+        self.modes.insert(name, mode);
+    }
+
     pub fn eval(&mut self, exp: String) {
         let ops = self.tokenize(&exp);
 
         for (m, op) in ops {
             if let Some(mut mode) = self.modes.remove(&m) {
                 mode.eval_operators(self, &op);
-                self.modes.insert(m, mode);
             } else {
                 break;
             }
@@ -150,13 +154,13 @@ impl Ui {
     fn get_wrap(&self) -> (String, String) {
         let mut left = String::new();
         let mut right = String::new();
+        let len = self.callstack.len();
 
-        for (.., (l, _)) in &self.callstack {
-            left += l;
-        }
-
-        for (.., (_, r)) in self.callstack.iter().rev() {
-            right += r;
+        if len > 0 {
+            for i in 0..len - 1 {
+                left += &self.callstack[i].4.0;
+                right += &self.callstack[len - 2 - i].4.1;
+            }
         }
 
         (left, right)
@@ -172,7 +176,7 @@ impl Ui {
 
     fn run_mode(&mut self, bind: Vec<Input>) -> bool {
         if let Some((m, mut state, repl, binds, wrap)) = self.callstack.pop() {
-            let mut mode = self.modes.remove(&m).unwrap();
+            let mut mode = self.modes.remove(&m).expect(&format!("{}", m));
             let messages = mode.eval_binding(&mut state, bind);
 
             self.modes.insert(m.clone(), mode);
@@ -201,6 +205,7 @@ impl Ui {
                 }
             } else {
                 self.eval(s);
+                self.call_history();
             }
         }
     }
@@ -256,6 +261,9 @@ impl Ui {
                     for k in keys {
                         self.eval_key(k);
                     }
+                }
+                Eval(s) => {
+                    self.eval(s);
                 }
                 Print(s, cursor) => {
                     let (mut l, r) = self.get_wrap();
@@ -337,7 +345,7 @@ impl Ui {
         }
     }
 
-    pub fn debug_show(&self) {
+    pub fn debug_show(&mut self) {
         println!("{:?}", self.callstack.iter().map(|(n, ..)| n).collect::<Vec<_>>());
         println!("{:?}", self.stack);
         println!("{}, {:?}", self.cursor, self.print);

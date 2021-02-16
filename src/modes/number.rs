@@ -35,6 +35,11 @@ impl Mode for Number_mode {
             Ok(f) => ui.get_stack().push(Num(f)),
             Err(_) => ()
         }
+
+        ui.insert_mode(
+            "number".to_string(),
+            Box::new(Number_mode{})
+        );
     }
 
     fn eval_binding(&mut self, state: &mut State, bind: Vec<Input>)
@@ -87,6 +92,7 @@ impl Mode for Number_mode {
 
         state.insert("buffer".to_string(), Str(buffer));
         state.insert("loc".to_string(), Uint(loc as u64));
+
         msg
     }
 

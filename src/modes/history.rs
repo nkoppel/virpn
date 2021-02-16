@@ -5,6 +5,7 @@ use crate::modes::*;
 pub struct History_mode {
     line_id: usize,
     undo_id: usize,
+    op: String,
     lines: Vec<String>,
     undos: Vec<(String, Stack)>
 }
@@ -14,6 +15,7 @@ impl History_mode {
         History_mode {
             line_id: 0,
             undo_id: 0,
+            op: String::new(),
             lines: Vec::new(),
             undos: vec![(String::new(), Stack::new())]
         }
@@ -22,7 +24,11 @@ impl History_mode {
 
 impl Mode for History_mode {
     fn get_bindings(&self) -> Vec<Vec<Input>> {
-        Vec::new()
+        vec![
+            bind_from_str("u"),
+            bind_from_str("R"),
+            bind_from_str("Q"),
+        ]
     }
 
     fn get_operator_regex(&self) -> Regex {
@@ -38,20 +44,28 @@ impl Mode for History_mode {
         let op = &ops[0..spc];
 
         if op == "history_add" {
-            self.undo_id += 1;
             self.undos.resize_with(self.undo_id, ||(String::new(), Stack::new()));
+            self.undo_id += 1;
 
             ops = &ops[spc + 1..];
-
-            ui.eval(ops.to_string());
 
             self.undos.push((ops.to_string(), ui.get_stack().clone()));
             self.lines.push(ops.to_string());
             self.line_id = self.lines.len() - 1;
+
+            ui.insert_mode(
+                "history".to_string(),
+                Box::new(mem::replace(self, History_mode::new()))
+            );
+
+            ui.eval(ops.to_string());
+            return;
         } else if op == "undo" && self.undo_id > 0 {
             self.undo_id -= 1;
 
             let (line, stack) = &self.undos[self.undo_id];
+
+            self.op = line.clone();
 
             *ui.get_stack() = stack.clone();
         } else if op == "redo" && self.undo_id < self.undos.len() - 1 {
@@ -59,8 +73,15 @@ impl Mode for History_mode {
 
             let (line, stack) = &self.undos[self.undo_id];
 
+            self.op = line.clone();
+
             *ui.get_stack() = stack.clone();
         }
+
+        ui.insert_mode(
+            "history".to_string(),
+            Box::new(mem::replace(self, History_mode::new()))
+        );
     }
 
     fn eval_binding(&mut self, state: &mut State, bind: Vec<Input>)
@@ -79,11 +100,16 @@ impl Mode for History_mode {
         msg.push(AllowReplace(false));
 
         if bind.is_empty() {
-            state.insert(
-                "op".to_string(),
-                state.get("return").unwrap_or(&Str(String::new())).clone()
-            );
+            let op =
+                Data::unwrap_string_or(
+                    state.remove("return").as_ref(),
+                    String::new()
+                );
+
+            self.op = op;
+
             msg.push(Return);
+
             return msg;
         }
 
@@ -105,22 +131,21 @@ impl Mode for History_mode {
                 }
             }
             Character(' ') | Character('\n') => {
-                state.insert(
-                    "op".to_string(),
-                    state
-                        .get("return")
-                        .unwrap_or(&Str(
-                            self.lines
-                                .get(self.line_id)
-                                .unwrap_or(&String::new())
-                                .clone()
-                        ))
-                        .clone()
-                );
+                if self.op.is_empty() {
+                    self.op =
+                        if let Some(r) = state.remove("return") {
+                            r.into_string()
+                        } else if let Some(l) = self.lines.get(self.line_id) {
+                            l.clone()
+                        } else {
+                            String::new()
+                        };
+                }
+
                 msg.push(Return);
             }
             Character('u') => {
-                state.insert("op".to_string(), Str("undo".to_string()));
+                self.op = "undo".to_string();
                 msg.push(Return);
 
                 if self.undo_id > 0 {
@@ -129,7 +154,7 @@ impl Mode for History_mode {
                 }
             }
             Character('R') => {
-                state.insert("op".to_string(), Str("redo".to_string()));
+                self.op = "redo".to_string();
                 msg.push(Return);
 
                 if self.undo_id < self.undos.len() - 1 {
@@ -142,18 +167,15 @@ impl Mode for History_mode {
             }
             _ => panic!()
         }
+
         msg
     }
 
     fn ret(&mut self, state: &mut State) -> String {
-        let op =
-            Data::unwrap_string_or(
-                state.get("op"),
-                Data::unwrap_string_or(state.get("return"), String::new())
-            );
+        let op = mem::replace(&mut self.op, String::new());
 
         if op == "undo" || op == "redo" {
-            op
+            op.clone()
         } else {
             format!("history_add {}", op)
         }
