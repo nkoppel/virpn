@@ -3,6 +3,7 @@ use crate::stack::Item;
 
 pub type State = HashMap<String, Data>;
 
+#[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub enum Data {
     Map(State),

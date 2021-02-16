@@ -171,7 +171,7 @@ impl Mode for History_mode {
         msg
     }
 
-    fn ret(&mut self, state: &mut State) -> String {
+    fn ret(&mut self, _: &mut State) -> String {
         let op = mem::replace(&mut self.op, String::new());
 
         if op == "undo" || op == "redo" {

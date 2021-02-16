@@ -131,6 +131,7 @@ impl<T> Bindings<T> where T: Clone {
         panic!("Unknown binding: {:?}", v);
     }
 
+    #[allow(dead_code)]
     pub fn read(&mut self, window: &Window)
         -> (Vec<Input>, T)
     {

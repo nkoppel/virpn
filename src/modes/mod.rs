@@ -101,13 +101,6 @@ impl Ui {
         out
     }
 
-    pub fn get_mode(&self, mode: &str) -> Option<&Box<dyn Mode>> {
-        match self.modes.get(mode) {
-            None => None,
-            Some(r) => Some(r)
-        }
-    }
-
     pub fn get_stack<'a>(&'a mut self) -> &'a mut Stack {
         &mut self.stack
     }
@@ -345,6 +338,7 @@ impl Ui {
         }
     }
 
+    #[allow(dead_code)]
     pub fn debug_show(&mut self) {
         println!("{:?}", self.callstack.iter().map(|(n, ..)| n).collect::<Vec<_>>());
         println!("{:?}", self.stack);
