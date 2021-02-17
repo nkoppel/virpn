@@ -8,8 +8,6 @@ extern "C" {
     pub fn refresh();
     pub fn clrtoeol();
 
-    pub async fn getch() -> JsValue;
-
     pub fn get_max_x() -> i32;
     pub fn get_max_y() -> i32;
 
@@ -43,19 +41,6 @@ impl Window {
 
     pub fn clrtoeol(&self) {
         clrtoeol();
-    }
-
-    pub async fn getch(&self) -> Option<Input> {
-        let ch = getch().await.as_string().unwrap();
-        Some(match &ch[..] {
-            "ArrowUp"    => KeyUp       ,
-            "ArrowDown"  => KeyDown     ,
-            "ArrowLeft"  => KeyLeft     ,
-            "ArrowRight" => KeyRight    ,
-            "Delete"     => KeyDC       ,
-            "Backspace"  => KeyBackspace,
-            s => Character(s.chars().next().unwrap())
-        })
     }
 
     pub fn get_max_x(&self) -> i32 {

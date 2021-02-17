@@ -135,6 +135,7 @@ impl<T> Bindings<T> where T: Clone {
         panic!("Unknown binding: {:?}", v);
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     #[allow(dead_code)]
     pub fn read(&mut self, window: &Window)
         -> (Vec<Input>, T)
