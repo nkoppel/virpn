@@ -99,6 +99,10 @@ impl<T> Bindings<T> where T: Clone {
         self.tree.insert(bind.iter(), output);
     }
 
+    pub fn get_bind(&self) -> Vec<Input> {
+        self.out_buf.clone()
+    }
+
     pub fn add(&mut self, i: Input) -> Option<T> {
         self.buf.push(i.clone());
 
@@ -128,9 +132,10 @@ impl<T> Bindings<T> where T: Clone {
             }
         }
 
-        panic!();
+        panic!("Unknown binding: {:?}", v);
     }
 
+    #[allow(dead_code)]
     pub fn read(&mut self, window: &Window)
         -> (Vec<Input>, T)
     {
@@ -201,7 +206,10 @@ pub fn print_command(window: &Window, cmd: &str, cursor_loc: usize) {
         let before_width = width * 2 / 3;
         let after_width  = width * 1 / 3;
         
-        if len - cursor_loc < after_width {
+        if cursor_loc > len {
+            window.addstr(&format!("<{}", cmd[len - width..].to_string()));
+            window.mv(height - 1, (width - 1) as i32);
+        } else if len - cursor_loc < after_width {
             window.addstr(&format!("<{}", cmd[len - width + 1..].to_string()));
             window.mv(height - 1, (width - (len - cursor_loc)) as i32);
         } else if cursor_loc < before_width {

@@ -36,58 +36,67 @@ impl Mode for Number_mode {
             Err(_) => ()
         }
 
-        ui.insert_mode("number".to_string(), Box::new(Number_mode{}));
+        ui.insert_mode(
+            "number".to_string(),
+            Box::new(Number_mode{})
+        );
     }
 
-    fn eval_bindings(&self, mut ui: Ui_helper, init: HashMap<&str, &str>)
-        -> ModeRes<(String, usize)>
+    fn eval_binding(&mut self, state: &mut State, bind: Vec<Input>)
+        -> Vec<Message>
     {
-        let mut buffer = init.get("text").unwrap_or(&"").to_string();
-        let mut loc = buffer.len();
+        let mut buffer = Data::unwrap_string_or(state.get("buffer"), String::new());
+        let mut loc = Data::unwrap_usize_or(state.get("loc"), 0);
+        let mut msg = Vec::new();
 
-        ui.add_escape_binding(vec![KeyBackspace]);
-        ui.add_escape_binding(vec![KeyLeft]);
-        ui.add_escape_binding(vec![KeyRight]);
+        msg.push(EscBind(vec![KeyBackspace]));
+        msg.push(EscBind(vec![KeyLeft]));
+        msg.push(EscBind(vec![KeyRight]));
 
-        loop {
-            ui.print_output(&buffer, loc);
-
-            let (bind, res) = ui.get_next_binding();
-
-            match bind[0] {
-                Character('a') => {buffer.insert(loc, '1'); loc += 1}
-                Character('s') => {buffer.insert(loc, '2'); loc += 1}
-                Character('d') => {buffer.insert(loc, '3'); loc += 1}
-                Character('f') => {buffer.insert(loc, '4'); loc += 1}
-                Character('g') => {buffer.insert(loc, '5'); loc += 1}
-                Character('h') => {buffer.insert(loc, '6'); loc += 1}
-                Character('j') => {buffer.insert(loc, '7'); loc += 1}
-                Character('k') => {buffer.insert(loc, '8'); loc += 1}
-                Character('l') => {buffer.insert(loc, '9'); loc += 1}
-                Character(';') => {buffer.insert(loc, '0'); loc += 1}
-                Character('n') => {
-                    if loc == 0 {
-                        buffer.insert(loc, '-');
-                        loc = 1
-                    }
+        match bind[0] {
+            Character('a') => {buffer.insert(loc, '1'); loc += 1}
+            Character('s') => {buffer.insert(loc, '2'); loc += 1}
+            Character('d') => {buffer.insert(loc, '3'); loc += 1}
+            Character('f') => {buffer.insert(loc, '4'); loc += 1}
+            Character('g') => {buffer.insert(loc, '5'); loc += 1}
+            Character('h') => {buffer.insert(loc, '6'); loc += 1}
+            Character('j') => {buffer.insert(loc, '7'); loc += 1}
+            Character('k') => {buffer.insert(loc, '8'); loc += 1}
+            Character('l') => {buffer.insert(loc, '9'); loc += 1}
+            Character(';') => {buffer.insert(loc, '0'); loc += 1}
+            Character('n') => {
+                if loc == 0 {
+                    buffer.insert(loc, '-');
+                    loc = 1
                 }
-                Character('m') => {
-                    if !buffer.contains('.') {
-                        buffer.insert(loc, '.');
-                        loc += 1;
-                    }
-                }
-
-                KeyLeft        => loc = loc.saturating_sub(1),
-                KeyRight       => if loc < buffer.len() {loc += 1},
-                KeyBackspace   => {
-                    if loc != 0 {
-                        loc -= 1;
-                        buffer.remove(loc);
-                    }
-                }
-                _ => return ((buffer, loc), res)
             }
+            Character('m') => {
+                if !buffer.contains('.') {
+                    buffer.insert(loc, '.');
+                    loc += 1;
+                }
+            }
+
+            KeyLeft        => loc = loc.saturating_sub(1),
+            KeyRight       => if loc < buffer.len() {loc += 1},
+            KeyBackspace   => {
+                if loc != 0 {
+                    loc -= 1;
+                    buffer.remove(loc);
+                }
+            }
+            _ => {}
         }
+
+        msg.push(Print(buffer.clone(), loc));
+
+        state.insert("buffer".to_string(), Str(buffer));
+        state.insert("loc".to_string(), Uint(loc as u64));
+
+        msg
+    }
+
+    fn ret(&mut self, state: &mut State) -> String {
+        Data::unwrap_string_or(state.get("buffer"), String::new())
     }
 }

@@ -1,6 +1,6 @@
 use crate::modes::*;
 
-pub type Op = Box<Fn(&mut Stack) -> ()>;
+pub type Op = Box<dyn Fn(&mut Stack) -> ()>;
 
 pub fn basic<T>(f: &'static impl Fn(&mut Stack) -> T) -> Op {
     Box::new(move |stack: &mut Stack| {f(stack);})
@@ -14,7 +14,7 @@ pub fn op_1(f: &'static impl Fn(f64) -> f64) -> Op {
 
         let mut new_stack = Stack::new();
         new_stack.push(stack.pop().unwrap());
-        let g: Box<Fn(Vec<f64>) -> Item> = Box::new(move |s| Num(f(s[0])));
+        let g: Box<dyn Fn(Vec<f64>) -> Item> = Box::new(move |s| Num(f(s[0])));
         stack.push(new_stack.apply_map(&g));
     })
 }
@@ -29,7 +29,10 @@ pub fn op_2(f: &'static impl Fn(f64, f64) -> f64) -> Op {
         new_stack.push(stack.pop().unwrap());
         new_stack.push(stack.pop().unwrap());
         new_stack.rev();
-        let g: Box<Fn(Vec<f64>) -> Item> = Box::new(move |s| Num(f(s[0], s[1])));
+
+        let g: Box<dyn Fn(Vec<f64>) -> Item> =
+            Box::new(move |s| Num(f(s[0], s[1])));
+
         stack.push(new_stack.apply_map(&g));
     })
 }
@@ -81,5 +84,13 @@ pub fn list_fold_op(f: &'static impl Fn(f64, f64) -> f64, start: f64) -> Op {
 pub fn constant(x: f64) -> Op {
     Box::new(move |stack: &mut Stack| {
         stack.push(Num(x));
+    })
+}
+
+pub fn chain(fs: Vec<Op>) -> Op {
+    Box::new(move |stack: &mut Stack| {
+        for f in &fs {
+            f(stack)
+        }
     })
 }

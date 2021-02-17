@@ -19,14 +19,13 @@ pub struct Op_mode{
 }
 
 impl Op_mode {
-    fn empty() -> Self {
-        Op_mode {
+    pub fn empty() -> Self {
+        Self {
             bindings: HashMap::new(),
             ops: HashMap::new(),
             func_ops: HashMap::new(),
         }
     }
-
     pub fn new() -> Self {
         let mut bindings = HashMap::new();
         let mut ops = HashMap::new();
@@ -79,13 +78,12 @@ impl Mode for Op_mode {
     fn eval_operators(&mut self, ui: &mut Ui, op: &str) {
         if let Some(f) = self.ops.get(op) {
             f(ui.get_stack());
-        }
-        else if let Some(_) = self.func_ops.get(op) {
+        } else if let Some(_) = self.func_ops.get(op) {
             let f = self.func_ops.get(op).unwrap().clone();
 
             ui.insert_mode(
                 "ops".to_string(),
-                Box::new(mem::replace(self, Self::empty()))
+                Box::new(mem::replace(self, Op_mode::empty()))
             );
 
             f(ui);
@@ -95,19 +93,22 @@ impl Mode for Op_mode {
 
         ui.insert_mode(
             "ops".to_string(),
-            Box::new(mem::replace(self, Self::empty()))
+            Box::new(mem::replace(self, Op_mode::empty()))
         );
     }
 
-    fn eval_bindings(&self, mut ui: Ui_helper, _: HashMap<&str, &str>)
-        -> ModeRes<(String, usize)>
+    fn eval_binding(&mut self, state: &mut State, bind: Vec<Input>)
+        -> Vec<Message>
     {
-        let (bind, res) = ui.get_next_binding();
         let op = self.bindings.get(&bind).unwrap().to_string();
         let len = op.len();
 
-        ui.print_output(&op, len);
+        state.insert("op".to_string(), Str(op.clone()));
 
-        ((op, len), res)
+        vec![Print(op, len), Return]
+    }
+
+    fn ret(&mut self, state: &mut State) -> String {
+        Data::unwrap_string_or(state.get("op"), String::new())
     }
 }

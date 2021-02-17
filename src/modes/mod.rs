@@ -1,9 +1,10 @@
-pub use std::collections::{HashMap, VecDeque};
+pub use std::collections::HashMap;
 pub use std::rc::Rc;
 pub use std::cell::Cell;
 
 pub use crate::stack::Stack;
 pub use crate::stack::{Item, Item::*};
+pub use crate::data::*;
 pub use crate::io::*;
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -22,6 +23,8 @@ pub mod var;
 pub mod history;
 pub mod line_edit;
 
+pub use Data::*;
+
 pub trait Mode {
     // set of bindings used to enter this mode
     fn get_bindings(&self) -> Vec<Vec<Input>>;
@@ -31,45 +34,60 @@ pub trait Mode {
 
     fn get_name(&self) -> String;
 
-    fn eval_bindings(&self, ui: Ui_helper, init: HashMap<&str, &str>)
-        -> ModeRes<(String, usize)>;
+    fn eval_binding(&mut self, state: &mut State, bind: Vec<Input>)
+        -> Vec<Message>;
 
-    fn eval_operators(&mut self, ui: &mut Ui, op: &str);
+    fn eval_operators(&mut self, run: &mut Ui, op: &str);
+
+    fn ret(&mut self, state: &mut State) -> String;
 }
 
-pub type ModeRes<T> = (T, Option<Vec<Input>>);
+#[derive(Clone, Debug)]
+pub enum Message {
+    Call(String, State),
+    CallByBind(Vec<Input>, State),
+    WrapText(String, String),
+    EscBind(Vec<Input>),
+    PressKeys(Vec<Input>),
+    Eval(String),
+    Print(String, usize),
+    AllowReplace(bool),
+    Return,
+    Exit,
+    NextKey(bool),
+}
+
+pub use Message::*;
 
 pub struct Ui {
     operator_regexes: Vec<(Regex, String)>,
     bindings: Bindings<(bool, String)>,
-    modes: HashMap<String, Box<Mode>>,
+    modes: HashMap<String, Box<dyn Mode>>,
+    pub exit: bool,
+    print: String,
+    cursor: usize,
     stack: Stack,
-    pub window: Window
-}
-
-#[allow(non_camel_case_types)]
-pub struct Ui_helper {
-    ui: Rc<Ui>,
-    init_bind: Vec<Input>,
-    bindings: Bindings<(bool, String)>,
-    mode: String,
-    prev_surround: (String, String),
-    surround: (String, String)
+    callstack: Vec<(String, State, bool, Bindings<(bool, String)>, (String, String))>,
+    nextkey: bool,
 }
 
 impl Ui {
-    pub fn new(window: Window) -> Self {
+    pub fn new() -> Self {
         Ui {
             operator_regexes: Vec::new(),
             bindings: Bindings::new(),
+            exit: false,
             modes: HashMap::new(),
+            print: String::new(),
+            cursor: 0,
             stack: Stack::new(),
-            window
+            callstack: Vec::new(),
+            nextkey: false,
         }
     }
 
-    pub fn build(window: Window, modes: Vec<Box<dyn Mode>>) -> Self {
-        let mut out = Ui::new(window);
+    pub fn build(modes: Vec<Box<dyn Mode>>) -> Self {
+        let mut out = Ui::new();
         let mut binds = Vec::new();
 
         for mode in modes.into_iter() {
@@ -88,27 +106,8 @@ impl Ui {
         out
     }
 
-    pub fn build_helper(self: Rc<Self>) -> Ui_helper {
-        Ui_helper::new(self.clone(), &self.bindings)
-    }
-
-    pub fn get_mode(&self, mode: &str) -> Option<&Box<Mode>> {
-        match self.modes.get(mode) {
-            None => None,
-            Some(r) => Some(r)
-        }
-    }
-
     pub fn get_stack<'a>(&'a mut self) -> &'a mut Stack {
         &mut self.stack
-    }
-
-    pub fn insert_mode(&mut self, name: String, mode: Box<dyn Mode>) {
-        self.modes.insert(name, mode);
-    }
-
-    pub fn remove_mode(&mut self, name: &str) -> Option<Box<dyn Mode>> {
-        self.modes.remove(name)
     }
 
     pub fn tokenize(&self, mut ops: &str) -> Vec<(String, String)> {
@@ -134,11 +133,15 @@ impl Ui {
         out
     }
 
+    pub fn insert_mode(&mut self, name: String, mode: Box<dyn Mode>) {
+        self.modes.insert(name, mode);
+    }
+
     pub fn eval(&mut self, exp: String) {
         let ops = self.tokenize(&exp);
 
-        for (mode, op) in ops {
-            if let Some(mut mode) = self.remove_mode(&mode) {
+        for (m, op) in ops {
+            if let Some(mut mode) = self.modes.remove(&m) {
                 mode.eval_operators(self, &op);
             } else {
                 break;
@@ -146,130 +149,210 @@ impl Ui {
         }
     }
 
-    pub fn print_stack(&self) {
-        print_stack(&self.window, &self.stack);
-    }
-}
+    fn get_wrap(&self) -> (String, String) {
+        let mut left = String::new();
+        let mut right = String::new();
+        let len = self.callstack.len();
 
-impl Ui_helper {
-    pub fn new(ui: Rc<Ui>, binds: &Bindings<(bool, String)>) -> Self {
-        Ui_helper {
-            ui,
-            init_bind: Vec::new(),
-            bindings: binds.clone(),
-            mode: String::new(),
-            prev_surround: (String::new(), String::new()),
-            surround: (String::new(), String::new())
+        if len > 0 {
+            for i in 0..len - 1 {
+                left += &self.callstack[i].4.0;
+                right += &self.callstack[len - 2 - i].4.1;
+            }
         }
+
+        (left, right)
     }
 
-    pub fn set_surrounding_text(&mut self, surr: (String, String)) {
-        self.surround = surr;
-    }
-
-    pub fn add_escape_binding(&mut self, bind: Vec<Input>) {
-        self.bindings.insert( bind, (true, self.mode.clone()) );
-    }
-
-    fn build_below(&self, mode: String) -> Self {
-        let mut out = Ui_helper::new(self.ui.clone(), &self.bindings);
-
-        let (pb, pa) = &self.prev_surround;
-        let (sb, sa) = &self.surround;
-
-        out.prev_surround = (pb.clone() + sb, sa.clone() + pa);
-        out.mode = mode;
-
-        out
-    }
-
-    fn is_my_binding(&mut self, bind: &Vec<Input>) -> bool {
-        (self.bindings.read_from_vec(&bind).1).1 == self.mode
-    }
-
-    pub fn get_next_binding(&mut self) -> ModeRes<Vec<Input>> {
-        let (bind, _) =
-            if !self.init_bind.is_empty() {
-                self.bindings.read_from_vec(
-                    &mem::replace(&mut self.init_bind, Vec::new())
-                )
-            } else {
-                self.bindings.read(&self.ui.window)
-            };
-
-        if self.is_my_binding(&bind) {
-            (bind, None)
+    fn get_bindings<'a>(&'a mut self) -> &'a mut Bindings<(bool, String)> {
+        if let Some((.., b, _)) = self.callstack.last_mut() {
+            b
         } else {
-            (bind.clone(), Some(bind))
+            &mut self.bindings
         }
     }
 
-    pub fn get_next_key(&self) -> Input {
-        self.ui.window.getch().unwrap()
+    fn run_mode(&mut self, bind: Vec<Input>) -> bool {
+        if let Some((m, mut state, repl, binds, wrap)) = self.callstack.pop() {
+            let mut mode = self.modes.remove(&m).expect(&format!("{}", m));
+            let messages = mode.eval_binding(&mut state, bind);
+
+            self.modes.insert(m.clone(), mode);
+            self.callstack.push((m, state, repl, binds, wrap));
+
+            self.eval_messages(messages);
+
+            return true;
+        }
+        false
     }
 
-    pub fn call_mode_by_name(&mut self,
-                            name: String,
-                            init: HashMap<&str, &str>,
-                            bind: Vec<Input>)
-        -> Option<ModeRes<(String, usize)>>
-    {
-        match self.ui.get_mode(&name) {
-            None => None,
-            Some(m) => {
-                let mut below = self.build_below(name);
-                below.init_bind = bind;
-                Some(m.eval_bindings(below, init))
+    fn mode_return(&mut self, call: bool) {
+        if let Some((m, mut state, ..)) = self.callstack.pop() {
+            let mut mode = self.modes.remove(&m).unwrap();
+            let s = mode.ret(&mut state);
+
+            self.modes.insert(m, mode);
+
+            if let Some((_, state, ..)) = self.callstack.last_mut() {
+                state.insert("return".to_string(), Str(s));
+                mem::drop(state);
+
+                if call {
+                    self.run_mode(Vec::new());
+                }
+            } else {
+                self.eval(s);
+                self.call_history();
             }
         }
     }
 
-    pub fn call_mode_by_next_binding(&mut self, buf: Vec<Input>)
-        -> ModeRes<(String, String, usize, bool)>
-    {
-        let (bind, (esc, mode)) =
-            if !buf.is_empty() {
-                self.bindings.read_from_vec(&buf)
-            } else if !self.init_bind.is_empty() {
-                self.bindings.read_from_vec(
-                    &mem::replace(&mut self.init_bind, Vec::new())
-                )
+    fn escape(&mut self, mode: &str) {
+        while let Some((m, ..)) = self.callstack.last() {
+            if m != mode {
+                self.mode_return(false);
             } else {
-                self.bindings.read(&self.ui.window)
-            };
-
-        if esc {
-            let tmp = (String::new(), String::new(), 0, true);
-
-            return (tmp, Some(bind));
-        }
-
-        let m = self.ui.get_mode(&mode).unwrap();
-
-        let mut below = self.build_below(mode.clone());
-
-        below.init_bind = bind;
-
-        let ((s, loc), res) = m.eval_bindings(below, HashMap::new());
-
-        if let Some(bind) = res.clone() {
-            let (_, (b, _)) = self.bindings.read_from_vec(&bind);
-
-            ((mode, s, loc, b), res)
-        } else {
-            ((mode, s, loc, false), res)
+                break;
+            }
         }
     }
 
-    pub fn tokenize(&self, ops: &str) -> Vec<(String, String)> {
-        self.ui.tokenize(ops)
+    pub fn eval_messages(&mut self, messages: Vec<Message>) {
+        for m in messages {
+            match m {
+                Call(mode, state) => {
+                    let binds = self.get_bindings().clone();
+                    self.callstack.push((mode, state, true, binds, (String::new(), String::new())));
+
+                    let (l, r) = self.get_wrap();
+
+                    self.cursor = l.len();
+                    self.print = l + &r;
+                    self.nextkey = false;
+                }
+                CallByBind(bind, state) => {
+                    let (b, (esc, m)) =
+                        self.get_bindings().read_from_vec(&bind);
+
+                    if esc {
+                        self.escape(&m);
+                    } else {
+                        self.eval_messages(vec![Call(m.clone(), state)]);
+                    }
+
+                    self.run_mode(b);
+                }
+                WrapText(left, right) => {
+                    if let Some((.., (l, r))) = self.callstack.last_mut() {
+                        *l = left;
+                        *r = right;
+                    }
+                }
+                EscBind(bind) => {
+                    if let Some((mode, ..)) = self.callstack.last() {
+                        let mode = mode.clone();
+                        self.get_bindings().insert(bind, (true, mode));
+                    }
+                }
+                PressKeys(keys) => {
+                    for k in keys {
+                        self.eval_key(k);
+                    }
+                }
+                Eval(s) => {
+                    self.eval(s);
+                }
+                Print(s, cursor) => {
+                    let (mut l, r) = self.get_wrap();
+                    self.cursor = cursor + l.len();
+
+                    l += &s;
+                    l += &r;
+
+                    self.print = l;
+                }
+                AllowReplace(b) => {
+                    if let Some((_, _, repl, ..)) = self.callstack.last_mut() {
+                        *repl = b;
+                    }
+                }
+                Return => {
+                    self.mode_return(true);
+                    self.nextkey = false;
+                }
+                Exit => {
+                    self.exit = true;
+                }
+                NextKey(b) => {
+                    self.nextkey = b;
+                }
+            }
+        }
     }
 
-    pub fn print_output(&self, output: &str, loc: usize) {
-        let (b, a) = &self.prev_surround;
+    pub fn eval_key(&mut self, key: Input) {
+        if self.nextkey {
+            self.run_mode(vec![key]);
+        } else if let Some((esc, m)) = self.get_bindings().add(key) {
+            let bind = self.get_bindings().get_bind();
 
-        let s = format!("{}{}{}", b, output, a);
+            if esc {
+                self.escape(&m);
+            }
+            if !self.callstack.is_empty() {
+                let (m2, _, repl, ..) = self.callstack.last().unwrap();
 
-        print_command(&self.ui.window, &s, loc + b.len())
+                if m == *m2 {
+                    self.run_mode(bind);
+                } else {
+                    if *repl {
+                        self.mode_return(true);
+                    }
+                    self.eval_messages(vec![
+                        CallByBind(bind, HashMap::new())
+                    ]);
+                }
+            } else {
+                self.eval_messages(vec![
+                    CallByBind(bind, HashMap::new())
+                ]);
+            }
+        }
+    }
+
+    pub fn call_history(&mut self) {
+        if self.callstack.is_empty() {
+            self.callstack.push((
+                "history".to_string(),
+                HashMap::new(),
+                false,
+                self.bindings.clone(),
+                (String::new(), String::new())
+            ));
+
+            self.eval_messages(vec![
+                EscBind(vec![KeyUp]),
+                EscBind(vec![KeyDown]),
+                EscBind(bind_from_str("u")),
+                EscBind(bind_from_str("R")),
+                EscBind(bind_from_str(" ")),
+                EscBind(bind_from_str("\n")),
+                EscBind(bind_from_str("Q")),
+            ])
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn debug_show(&mut self) {
+        println!("{:?}", self.callstack.iter().map(|(n, ..)| n).collect::<Vec<_>>());
+        println!("{:?}", self.stack);
+        println!("{}, {:?}", self.cursor, self.print);
+        println!();
+    }
+
+    pub fn show(&self, window: &Window) {
+        print_stack(&window, &self.stack);
+        print_command(&window, &self.print, self.cursor);
     }
 }
