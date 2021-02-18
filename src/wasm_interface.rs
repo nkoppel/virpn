@@ -33,3 +33,13 @@ pub fn eval_key(s: String) {
         ui.show(&initscr());
     }
 }
+
+#[wasm_bindgen]
+pub fn eval(s: String) {
+    unsafe {
+        let mut state = STATE.clone();
+        let ui = Arc::get_mut_unchecked(&mut state);
+
+        ui.eval(s);
+    }
+}
