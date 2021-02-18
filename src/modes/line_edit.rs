@@ -139,7 +139,7 @@ impl Mode for Line_edit_mode {
             return msg;
         }
 
-        if bind.is_empty() {
+        if bind.is_empty() || bind == bind_from_str(" ") {
             if let Some(Str(op)) = state.remove("return") {
                 self.strs_hist.push((self.loc, self.strs.clone()));
                 self.strs.insert(self.loc, op);

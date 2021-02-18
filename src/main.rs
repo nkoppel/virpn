@@ -16,4 +16,5 @@ use crate::interface::*;
 
 pub fn main() {
     interface();
+    // debug_interface();
 }
