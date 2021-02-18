@@ -1,3 +1,5 @@
-import * as wasm from "./virpn.js";
+wasm_bindgen()
 
-wasm.wasm_start();
+document.addEventListener("keydown", function (e) {
+    wasm_bindgen.eval_key(e.key);
+})

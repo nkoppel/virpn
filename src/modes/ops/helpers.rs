@@ -1,12 +1,12 @@
 use crate::modes::*;
 
-pub type Op = Box<dyn Fn(&mut Stack) -> ()>;
+pub type Op = Box<dyn Fn(&mut Stack) -> () + Sync + Send>;
 
-pub fn basic<T>(f: &'static impl Fn(&mut Stack) -> T) -> Op {
+pub fn basic<T>(f: &'static (impl Fn(&mut Stack) -> T + Sync + Send)) -> Op {
     Box::new(move |stack: &mut Stack| {f(stack);})
 }
 
-pub fn op_1(f: &'static impl Fn(f64) -> f64) -> Op {
+pub fn op_1(f: &'static (impl Fn(f64) -> f64 + Sync + Send)) -> Op {
     Box::new(move |stack: &mut Stack| {
         if stack.is_empty() {
             return;
@@ -19,7 +19,7 @@ pub fn op_1(f: &'static impl Fn(f64) -> f64) -> Op {
     })
 }
 
-pub fn op_2(f: &'static impl Fn(f64, f64) -> f64) -> Op {
+pub fn op_2(f: &'static (impl Fn(f64, f64) -> f64 + Sync + Send)) -> Op {
     Box::new(move |stack: &mut Stack| {
         if stack.len() < 2 {
             return;
@@ -37,7 +37,7 @@ pub fn op_2(f: &'static impl Fn(f64, f64) -> f64) -> Op {
     })
 }
 
-pub fn vec2_op(f: &'static impl Fn(f64, f64) -> (f64, f64)) -> Op {
+pub fn vec2_op(f: &'static (impl Fn(f64, f64) -> (f64, f64) + Sync + Send)) -> Op {
     Box::new(move |stack: &mut Stack| {
         stack.down();
         if stack.len() < 2 {
@@ -58,7 +58,7 @@ pub fn vec2_op(f: &'static impl Fn(f64, f64) -> (f64, f64)) -> Op {
     })
 }
 
-pub fn fold_op(f: &'static impl Fn(f64, f64) -> f64, start: f64) -> Op {
+pub fn fold_op(f: &'static (impl Fn(f64, f64) -> f64 + Sync + Send), start: f64) -> Op {
     Box::new(move |stack: &mut Stack| {
         let n = stack.apply_fold(f, start);
 
@@ -67,7 +67,7 @@ pub fn fold_op(f: &'static impl Fn(f64, f64) -> f64, start: f64) -> Op {
     })
 }
 
-pub fn list_fold_op(f: &'static impl Fn(f64, f64) -> f64, start: f64) -> Op {
+pub fn list_fold_op(f: &'static (impl Fn(f64, f64) -> f64 + Sync + Send), start: f64) -> Op {
     Box::new(move |stack: &mut Stack| {
         match stack.pop() {
             Some(List(s)) => {

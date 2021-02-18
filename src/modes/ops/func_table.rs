@@ -128,28 +128,28 @@ fn zero(_: f64, x: f64, y: f64) -> bool { (x > 0.) != (y > 0.) }
 
 pub fn gen_func_ops() -> Vec<(String, Vec<Vec<Input>>, FuncOp)> {
     vec![
-        ("run",        vec!["ifr" ], Rc::new(&run) as FuncOp),
-        ("run_times",  vec!["iftr"], Rc::new(&run_times)),
+        ("run",        vec!["ifr" ], Arc::new(&run) as FuncOp),
+        ("run_times",  vec!["iftr"], Arc::new(&run_times)),
 
-        ("max",        vec!["irx" ], Rc::new(|ui| optimize(true, ui))),
-        ("min",        vec!["irn" ], Rc::new(|ui| optimize(false, ui))),
+        ("max",        vec!["irx" ], Arc::new(|ui| optimize(true, ui))),
+        ("min",        vec!["irn" ], Arc::new(|ui| optimize(false, ui))),
         ("zero",       vec!["irz" ], million_solver(&zero)),
 
         ("range_zero", vec!["irrz" ], range_solver(&zero)),
 
-        ("area",  vec!["ifa"], Rc::new(integrate)),
-        ("slope", vec!["ifs"], Rc::new(derivative_at)),
+        ("area",  vec!["ifa"], Arc::new(integrate)),
+        ("slope", vec!["ifs"], Arc::new(derivative_at)),
 
-        ("euler",        vec!["ife"] , Rc::new(|ui| euler_approx(false, ui))),
-        ("euler_log",    vec!["ifle"], Rc::new(|ui| euler_approx(true, ui))),
+        ("euler",        vec!["ife"] , Arc::new(|ui| euler_approx(false, ui))),
+        ("euler_log",    vec!["ifle"], Arc::new(|ui| euler_approx(true, ui))),
 
-        ("map_depth",  vec!["ifdm"], Rc::new(map_depth)),
-        ("map"      ,  vec!["ifm" ], Rc::new(|ui: &mut Ui| {ui.get_stack().push(Num(0.)); map_depth(ui)})),
-        ("map_nums" ,  vec!["ifnm"], Rc::new(|ui: &mut Ui| {ui.get_stack().push(Num(usize::max_value() as f64)); map_depth(ui)})),
+        ("map_depth",  vec!["ifdm"], Arc::new(map_depth)),
+        ("map"      ,  vec!["ifm" ], Arc::new(|ui: &mut Ui| {ui.get_stack().push(Num(0.)); map_depth(ui)})),
+        ("map_nums" ,  vec!["ifnm"], Arc::new(|ui: &mut Ui| {ui.get_stack().push(Num(usize::max_value() as f64)); map_depth(ui)})),
 
-        ("fold_depth",  vec!["ifdf"], Rc::new(fold_depth)),
-        ("fold"      ,  vec!["iff" ], Rc::new(|ui: &mut Ui| {ui.get_stack().push(Num(0.)); fold_depth(ui)})),
-        ("fold_nums" ,  vec!["ifnf"], Rc::new(|ui: &mut Ui| {ui.get_stack().push(Num(usize::max_value() as f64)); fold_depth(ui)})),
+        ("fold_depth",  vec!["ifdf"], Arc::new(fold_depth)),
+        ("fold"      ,  vec!["iff" ], Arc::new(|ui: &mut Ui| {ui.get_stack().push(Num(0.)); fold_depth(ui)})),
+        ("fold_nums" ,  vec!["ifnf"], Arc::new(|ui: &mut Ui| {ui.get_stack().push(Num(usize::max_value() as f64)); fold_depth(ui)})),
     ]
         .into_iter()
         .map(|(name, binds, op)| (

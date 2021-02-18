@@ -1,11 +1,19 @@
 pub use std::collections::HashMap;
-pub use std::rc::Rc;
+pub use std::sync::Arc;
 pub use std::cell::Cell;
 
 pub use crate::stack::Stack;
 pub use crate::stack::{Item, Item::*};
 pub use crate::data::*;
 pub use crate::io::*;
+
+use self::{
+    number::Number_mode,
+    ops::Op_mode,
+    var::Var_mode,
+    history::History_mode,
+    line_edit::Line_edit_mode
+};
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use pancurses::{Input, Input::*, Window};
@@ -62,7 +70,7 @@ pub use Message::*;
 pub struct Ui {
     operator_regexes: Vec<(Regex, String)>,
     bindings: Bindings<(bool, String)>,
-    modes: HashMap<String, Box<dyn Mode>>,
+    modes: HashMap<String, Box<dyn Mode + Send + Sync>>,
     pub exit: bool,
     print: String,
     cursor: usize,
@@ -86,7 +94,7 @@ impl Ui {
         }
     }
 
-    pub fn build(modes: Vec<Box<dyn Mode>>) -> Self {
+    pub fn build_from_modes(modes: Vec<Box<dyn Mode + Send + Sync>>) -> Self {
         let mut out = Ui::new();
         let mut binds = Vec::new();
 
@@ -104,6 +112,16 @@ impl Ui {
         out.bindings = Bindings::from_vec(binds);
 
         out
+    }
+
+    pub fn build() -> Self {
+        Self::build_from_modes(vec![
+            Box::new(Number_mode{}),
+            Box::new(Op_mode::new()),
+            Box::new(Var_mode::new()),
+            Box::new(History_mode::new()),
+            Box::new(Line_edit_mode::new())
+        ])
     }
 
     pub fn get_stack<'a>(&'a mut self) -> &'a mut Stack {
@@ -133,7 +151,7 @@ impl Ui {
         out
     }
 
-    pub fn insert_mode(&mut self, name: String, mode: Box<dyn Mode>) {
+    pub fn insert_mode(&mut self, name: String, mode: Box<dyn Mode + Send + Sync>) {
         self.modes.insert(name, mode);
     }
 

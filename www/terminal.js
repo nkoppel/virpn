@@ -40,42 +40,28 @@ function refresh() {
     term.innerHTML = out;
 }
 
-async function get_keydown() {
-    return new Promise(function (resolve,reject) {
-            document.addEventListener("keydown", function (e) {
-                resolve(e.key)
-            })
-        }
-    );
+let doRefresh = false;
+
+function refresh_export() {
+    doRefresh = true;
+    setTimeout(() => {doRefresh = false}, 15);
 }
 
-async function getch() {
-    while (true) {
-        let key = await get_keydown();
-        switch (key) {
-            case "Shift": case "Control": case "Meta": case "Alt": continue;
-            default:
-                return key;
-        }
-    }
-}
+setInterval(() => {if (doRefresh) {refresh()}}, 15)
 
 function get_max_x() {
     return width;
 }
 
 function get_max_y() {
-    return width;
+    return height;
 }
 
 function get_cur_yx() {
-    return [screen.cursor_y, screen.cursor_x];
+    return [screen.cursor_y + 1, screen.cursor_x + 1];
 }
 
-function mv(x, y) {
-    x -= 1;
-    y -= 1;
-
+function mv(y, x) {
     if (x >= 0 && x < width && y >= 0 && y < height) {
         screen.cursor_x = x;
         screen.cursor_y = y;
@@ -89,11 +75,12 @@ function clrtoeol() {
 }
 
 function addstr(str) {
+    console.log(screen.cursor_x);
     if (screen.cursor_x + str.length > width) {
         str = str.substr(0, width - screen.cursor_x);
     }
 
     for (var x = 0; x < str.length; x++) {
-        screen.lines[screen.cursor_y][screen.cursor_x + x] = str.substr(x, 1);
+        screen.lines[screen.cursor_y][screen.cursor_x + x] = str.substring(x, x + 1);
     }
 }

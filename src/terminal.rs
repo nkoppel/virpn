@@ -1,11 +1,9 @@
 pub use wasm_bindgen::prelude::*;
 use js_sys::*;
-use wasm_bindgen_futures::*;
-use futures::executor::block_on;
 
 #[wasm_bindgen]
 extern "C" {
-    pub fn refresh();
+    pub fn refresh_export();
     pub fn clrtoeol();
 
     pub fn get_max_x() -> i32;
@@ -13,7 +11,7 @@ extern "C" {
 
     pub fn get_cur_yx() -> Vec<i32>;
 
-    pub fn mv(x: i32, y: i32);
+    pub fn mv(y: i32, x: i32);
 
     pub fn addstr(s: &str);
 }
@@ -36,7 +34,7 @@ pub struct Window {}
 
 impl Window {
     pub fn refresh(&self) {
-        refresh();
+        refresh_export();
     }
 
     pub fn clrtoeol(&self) {
@@ -56,8 +54,8 @@ impl Window {
         (tmp[0], tmp[1])
     }
 
-    pub fn mv(&self, x: i32, y: i32) {
-        mv(x, y)
+    pub fn mv(&self, y: i32, x: i32) {
+        mv(y, x)
     }
 
     pub fn addstr(&self, s: &str) {

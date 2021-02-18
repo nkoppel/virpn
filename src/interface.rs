@@ -1,27 +1,8 @@
 use crate::modes::*;
-
-use crate::modes::{
-    number::Number_mode,
-    ops::Op_mode,
-    var::Var_mode,
-    history::History_mode,
-    line_edit::Line_edit_mode
-};
-
 use pancurses::{initscr, endwin, noecho};
 
-fn new_ui() -> Ui {
-    Ui::build(vec![
-        Box::new(Number_mode{}),
-        Box::new(Op_mode::new()),
-        Box::new(Var_mode::new()),
-        Box::new(History_mode::new()),
-        Box::new(Line_edit_mode::new()),
-    ])
-}
-
 pub fn interface() {
-    let mut ui = new_ui();
+    let mut ui = Ui::build();
     let window = initscr();
     window.keypad(true);
     noecho();
@@ -40,7 +21,7 @@ pub fn interface() {
 
 #[allow(dead_code)]
 pub fn debug_interface() {
-    let mut ui = new_ui();
+    let mut ui = Ui::build();
 
     while !ui.exit {
         ui.debug_show();

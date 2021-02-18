@@ -1,4 +1,6 @@
+*.txt
 /target
 **/*.rs.bk
-www/node_modules
-www/dist
+www/virpn.js
+www/*.ts
+www/*.wasm
