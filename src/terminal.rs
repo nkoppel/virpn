@@ -1,5 +1,4 @@
 pub use wasm_bindgen::prelude::*;
-use js_sys::*;
 
 #[wasm_bindgen]
 extern "C" {
@@ -64,9 +63,6 @@ impl Window {
 
     pub fn keypad(&self, _: bool) {}
 }
-
-pub fn endwin() {}
-pub fn noecho() {}
 
 pub fn initscr() -> Window {
     Window{}

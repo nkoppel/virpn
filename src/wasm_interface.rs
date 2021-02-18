@@ -1,9 +1,7 @@
 pub use wasm_bindgen::prelude::*;
 use lazy_static::lazy_static;
 
-use std::sync::{Arc, Mutex};
-
-use std::borrow::Borrow;
+use std::sync::Arc;
 
 use crate::modes::*;
 use crate::terminal::*;

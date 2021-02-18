@@ -2,7 +2,7 @@
 use pancurses::{Input, Input::*, Window, noecho};
 
 #[cfg(target_arch = "wasm32")]
-use crate::terminal::{Input, Input::*, Window, noecho};
+use crate::terminal::{Input, Input::*, Window};
 
 use std::collections::HashMap;
 
