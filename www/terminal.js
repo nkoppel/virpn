@@ -4,17 +4,21 @@ var height = 40;
 var screen = {lines: [], cursor_x: 0, cursor_y: 0};
 var term = document.getElementById("terminal");
 
-var tmp;
-for (var y = 0; y < height; y++) {
-    tmp = [];
+function init_lines() {
+    screen.lines = [];
+    var tmp;
+    for (var y = 0; y < height; y++) {
+        tmp = [];
 
-    for (var x = 0; x < width; x++) {
-        tmp.push(' ');
+        for (var x = 0; x < width; x++) {
+            tmp.push(' ');
+        }
+
+        screen.lines.push(tmp);
     }
-
-    screen.lines.push(tmp);
 }
 
+init_lines()
 refresh()
 
 function escapeHTML(str) {
@@ -75,7 +79,6 @@ function clrtoeol() {
 }
 
 function addstr(str) {
-    console.log(screen.cursor_x);
     if (screen.cursor_x + str.length > width) {
         str = str.substr(0, width - screen.cursor_x);
     }

@@ -1,6 +1,16 @@
 #terminal {
     background-color: black;
-    color: white
+    color: white;
+    height: auto;
+    width: auto;
+}
+
+#textSize {
+    position: absolute;
+    visibility: hidden;
+    height: auto;
+    width: auto;
+    white-space: nowrap;
 }
 
 .cursor {

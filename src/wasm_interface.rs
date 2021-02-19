@@ -29,6 +29,7 @@ pub fn eval_key(s: String) {
                 _ if s.len() == 1 => Character(s.chars().next().unwrap()),
                 _ => return
             };
+
         ui.eval_key(key);
         ui.show(&initscr());
     }
@@ -41,5 +42,15 @@ pub fn eval(s: String) {
         let ui = Arc::get_mut_unchecked(&mut state);
 
         ui.eval(s);
+    }
+}
+
+#[wasm_bindgen]
+pub fn show() {
+    unsafe {
+        let mut state = STATE.clone();
+        let ui = Arc::get_mut_unchecked(&mut state);
+
+        ui.show(&initscr());
     }
 }
