@@ -1,7 +1,7 @@
 var width  = 80;
 var height = 40;
 
-var screen = {lines: [], cursor_x: 0, cursor_y: 0};
+var screen = {lines: [], cursor_x: 0, cursor_y: 0, changed: false};
 var term = document.getElementById("terminal");
 
 function init_lines() {
@@ -44,14 +44,15 @@ function refresh() {
     term.innerHTML = out;
 }
 
-let doRefresh = false;
-
 function refresh_export() {
-    doRefresh = true;
-    setTimeout(() => {doRefresh = false}, 15);
 }
 
-setInterval(() => {if (doRefresh) {refresh()}}, 15)
+setInterval(() => {
+    if (screen.changed) {
+        refresh();
+        screen.changed = false;
+    }
+}, 15)
 
 function get_max_x() {
     return width;
@@ -67,18 +68,24 @@ function get_cur_yx() {
 
 function mv(y, x) {
     if (x >= 0 && x < width && y >= 0 && y < height) {
+        screen.changed = true;
+
         screen.cursor_x = x;
         screen.cursor_y = y;
     }
 }
 
 function clrtoeol() {
+    screen.changed = true;
+
     for (var x = screen.cursor_x; x < width; x++) {
         screen.lines[screen.cursor_y][x] = " ";
     }
 }
 
 function addstr(str) {
+    screen.changed = true;
+
     if (screen.cursor_x + str.length > width) {
         str = str.substr(0, width - screen.cursor_x);
     }
