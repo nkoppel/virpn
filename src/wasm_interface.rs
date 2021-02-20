@@ -19,13 +19,14 @@ pub fn eval_key(s: String) {
         ui.call_history();
         let key =
             match &s[..] {
-                "ArrowUp"    => KeyUp          ,
-                "ArrowDown"  => KeyDown        ,
-                "ArrowLeft"  => KeyLeft        ,
-                "ArrowRight" => KeyRight       ,
-                "Delete"     => KeyDC          ,
-                "Backspace"  => KeyBackspace   ,
-                "Enter"      => Character('\n'),
+                "ArrowUp"    => KeyUp              ,
+                "ArrowDown"  => KeyDown            ,
+                "ArrowLeft"  => KeyLeft            ,
+                "ArrowRight" => KeyRight           ,
+                "Delete"     => KeyDC              ,
+                "Escape"     => Character('\u{1b}'),
+                "Backspace"  => KeyBackspace       ,
+                "Enter"      => Character('\n')    ,
                 _ if s.len() == 1 => Character(s.chars().next().unwrap()),
                 _ => return
             };

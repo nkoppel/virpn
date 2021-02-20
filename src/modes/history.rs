@@ -91,6 +91,8 @@ impl Mode for History_mode {
 
         msg.push(EscBind(vec![KeyUp]));
         msg.push(EscBind(vec![KeyDown]));
+        msg.push(EscBind(vec![Character('\u{1b}')]));
+        msg.push(EscBind(vec![KeyDC]));
         msg.push(EscBind(bind_from_str("u")));
         msg.push(EscBind(bind_from_str("R")));
         msg.push(EscBind(bind_from_str(" ")));
@@ -100,13 +102,11 @@ impl Mode for History_mode {
         msg.push(AllowReplace(false));
 
         if bind.is_empty() {
-            let op =
+            self.op =
                 Data::unwrap_string_or(
                     state.remove("return").as_ref(),
                     String::new()
                 );
-
-            self.op = op;
 
             msg.push(Return);
 
@@ -142,6 +142,11 @@ impl Mode for History_mode {
                         };
                 }
 
+                msg.push(Return);
+            }
+            Character('\u{1b}') | KeyDC => {
+                self.line_id = self.lines.len().saturating_sub(1);
+                msg.push(Print(String::new(), 0));
                 msg.push(Return);
             }
             Character('u') => {

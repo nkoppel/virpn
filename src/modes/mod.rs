@@ -352,6 +352,8 @@ impl Ui {
             self.eval_messages(vec![
                 EscBind(vec![KeyUp]),
                 EscBind(vec![KeyDown]),
+                EscBind(vec![Character('\u{1b}')]),
+                EscBind(vec![KeyDC]),
                 EscBind(bind_from_str("u")),
                 EscBind(bind_from_str("R")),
                 EscBind(bind_from_str(" ")),
