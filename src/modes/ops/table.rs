@@ -285,6 +285,20 @@ fn transpose(stack: &mut Stack) {
     );
 }
 
+fn cumsum(stack: &mut Stack) {
+    let l = if let Some(l) = stack.pop_as_list() {l} else {return};
+
+    let mut tmp_stack = Stack::new();
+
+    for i in l {
+        tmp_stack.push(tmp_stack.last().unwrap_or(&Num(0.)).clone());
+        tmp_stack.push(i);
+        add(&mut tmp_stack);
+    }
+
+    stack.push(List(tmp_stack.into_vec()));
+}
+
 use std::f64::consts;
 use std::f64;
 
@@ -366,6 +380,7 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("repeat" , vec!["ilr"], basic(&repeat)),
         ("len"    , vec!["ill"], basic(&list_len)),
         ("flatten", vec!["ilf"], basic(&flatten)),
+        ("cumsum" , vec!["ilc"], basic(&cumsum)),
         ("transpose", vec!["ilt"], basic(&transpose)),
 
         ("synth_sub", vec!["ipp", "ilp"], basic(&synth_sub)),

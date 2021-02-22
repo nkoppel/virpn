@@ -124,6 +124,27 @@ fn derivative_at(ui: &mut Ui) {
     ui.get_stack().push(Num((y2 - y) / d));
 }
 
+fn sequence(ui: &mut Ui) {
+    let stack = ui.get_stack();
+
+    let n = if let Some(n) = stack.pop_as_num () {n} else {return};
+    let x = if let Some(n) = stack.pop_as_num () {n} else {return};
+    let f = if let Some(f) = stack.pop_as_func() {f} else {return};
+
+    stack.down();
+    stack.push(Num(x));
+
+    mem::drop(stack);
+
+    for _ in 0..n as usize {
+        let item = ui.get_stack().last().unwrap().clone();
+        ui.get_stack().push(item);
+        ui.eval(f.clone());
+    }
+
+    ui.get_stack().up()
+}
+
 fn zero(_: f64, x: f64, y: f64) -> bool { (x > 0.) != (y > 0.) }
 
 pub fn gen_func_ops() -> Vec<(String, Vec<Vec<Input>>, FuncOp)> {
@@ -136,6 +157,8 @@ pub fn gen_func_ops() -> Vec<(String, Vec<Vec<Input>>, FuncOp)> {
         ("zero",       vec!["irz" ], million_solver(&zero)),
 
         ("range_zero", vec!["irrz" ], range_solver(&zero)),
+
+        ("sequence", vec!["ifq"], Arc::new(sequence)),
 
         ("area",  vec!["ifa"], Arc::new(integrate)),
         ("slope", vec!["ifs"], Arc::new(derivative_at)),
