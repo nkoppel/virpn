@@ -139,27 +139,32 @@ impl Mode for Line_edit_mode {
             return msg;
         }
 
-        if bind.is_empty() || bind == bind_from_str(" ") {
+        if  bind.is_empty() ||
+            bind == bind_from_str(" ") ||
+            bind == bind_from_str("\n")
+        {
             if let Some(Str(op)) = state.remove("return") {
                 self.strs_hist.push((self.loc, self.strs.clone()));
                 self.strs.insert(self.loc, op);
                 self.loc += 1;
             }
-        } else if bind == bind_from_str("(") ||
-                  bind == bind_from_str("ifi")
-        {
+        }
+
+        if bind == bind_from_str("(") || bind == bind_from_str("ifi") {
             self.strs_hist.push((self.loc, self.strs.clone()));
             self.strs.insert(self.loc, "(".to_string());
             self.loc += 1;
             self.strs.insert(self.loc, ")".to_string());
-        } else if bind == bind_from_str("[") ||
-                  bind == bind_from_str("ili")
-        {
+        }
+
+        if bind == bind_from_str("[") || bind == bind_from_str("ili") {
             self.strs_hist.push((self.loc, self.strs.clone()));
             self.strs.insert(self.loc, "[".to_string());
             self.loc += 1;
             self.strs.insert(self.loc, "]".to_string());
-        } else if bind.len() == 1 {
+        }
+
+        if bind.len() == 1 {
             match bind[0] {
                 KeyLeft => {
                     if self.loc > 0 {
