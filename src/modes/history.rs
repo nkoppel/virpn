@@ -39,18 +39,22 @@ impl Mode for History_mode {
         "history".to_string()
     }
 
-    fn eval_operators(&mut self, ui: &mut Ui, mut ops: &str) {
+    fn eval_operators(&mut self, ui: &mut Ui, ops: &str) {
         let spc = ops.find(' ').unwrap_or(ops.len());
         let op = &ops[0..spc];
 
         if op == "history_add" {
+            let ops = ops[spc + 1..].to_string();
+
             self.undos.resize_with(self.undo_id, ||(String::new(), Stack::new()));
             self.undo_id += 1;
 
-            ops = &ops[spc + 1..];
+            self.undos.push((ops.clone(), ui.get_stack().clone()));
 
-            self.undos.push((ops.to_string(), ui.get_stack().clone()));
-            self.lines.push(ops.to_string());
+            if Some(&ops) != self.lines.last() {
+                self.lines.push(ops.clone());
+            }
+
             self.line_id = self.lines.len() - 1;
 
             ui.insert_mode(
@@ -58,7 +62,7 @@ impl Mode for History_mode {
                 Box::new(mem::replace(self, History_mode::new()))
             );
 
-            ui.eval(ops.to_string());
+            ui.eval(ops.clone());
             return;
         } else if op == "undo" && self.undo_id > 0 {
             self.undo_id -= 1;
