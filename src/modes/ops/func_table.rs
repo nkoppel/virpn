@@ -128,11 +128,11 @@ fn sequence(ui: &mut Ui) {
     let stack = ui.get_stack();
 
     let n = if let Some(n) = stack.pop_as_num () {n} else {return};
-    let x = if let Some(n) = stack.pop_as_num () {n} else {return};
+    let x = if let Some(i) = stack.pop        () {i} else {return};
     let f = if let Some(f) = stack.pop_as_func() {f} else {return};
 
     stack.down();
-    stack.push(Num(x));
+    stack.push(x);
 
     mem::drop(stack);
 
@@ -154,9 +154,7 @@ pub fn gen_func_ops() -> Vec<(String, Vec<Vec<Input>>, FuncOp)> {
 
         ("max",        vec!["irx" ], Arc::new(|ui| optimize(true, ui))),
         ("min",        vec!["irn" ], Arc::new(|ui| optimize(false, ui))),
-        ("zero",       vec!["irz" ], million_solver(&zero)),
-
-        ("range_zero", vec!["irrz" ], range_solver(&zero)),
+        ("zero",       vec!["irz" ], range_solver(&zero)),
 
         ("sequence", vec!["ifq"], Arc::new(sequence)),
 

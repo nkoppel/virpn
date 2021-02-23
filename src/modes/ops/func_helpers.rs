@@ -55,12 +55,6 @@ fn solver<'a, F>(op: &'static F, start: f64, end: f64) -> FuncOp
     })
 }
 
-pub fn million_solver<'a, F>(op: &'static F) -> FuncOp
-    where F: Fn(f64, f64, f64) -> bool + Send + Sync
-{
-    solver(op, -1_000_000., 1_000_000.)
-}
-
 pub fn range_solver<'a, F>(op: &'static F) -> FuncOp
     where F: Fn(f64, f64, f64) -> bool + Send + Sync
 {

@@ -365,11 +365,11 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("pop"   , vec!["isp", "op"     ], basic(&|st| {st.pop();})),
         ("rev"   , vec!["isv", "ov"     ], basic(&|st| st.rev())),
 
-        ("round"       , vec!["ior"             ], op_1(&|x| x.round())),
-        ("floor"       , vec!["iof"             ], op_1(&|x| x.floor())),
-        ("ceil"        , vec!["ioc"             ], op_1(&|x| x.ceil())),
-        ("round_digits", vec!["iodr"            ], op_2(&round_digits)),
-        ("clean_errors", vec!["ioe", "ioc", "ol"], op_1(&clean_errors)),
+        ("round"       , vec!["ior"      ], op_1(&|x| x.round())),
+        ("floor"       , vec!["iof"      ], op_1(&|x| x.floor())),
+        ("ceil"        , vec!["ioc"      ], op_1(&|x| x.ceil())),
+        ("round_digits", vec!["iodr"     ], op_2(&round_digits)),
+        ("clean_errors", vec!["ioe", "ol"], op_1(&clean_errors)),
 
         ("new_list" , vec!["iln"], basic(&|st| {st.push(List(Vec::new())); st.down()})),
         ("sum_list" , vec!["ilu"], list_fold_op(&|x, y| x + y, 0.)),

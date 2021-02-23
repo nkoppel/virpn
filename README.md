@@ -4,6 +4,8 @@ The Vi-Inspired Reverse Polish Notation calculator.
 
 A calculator designed for efficiency inspired by [vim](https://www.vim.org/), [vim-vertigo](https://github.com/prendradjaja/vim-vertigo), and hp rpn calculators.
 
+A web build of virpn can be found [here](https://nkoppel.github.io/virpn).
+
 ## Features
 
 - Rpn calculations on an infinite stack
@@ -11,6 +13,7 @@ A calculator designed for efficiency inspired by [vim](https://www.vim.org/), [v
 - Lists
 - 52 variables
 - Undo and redo
+- Polynomial and Calculus operations
 
 ## Concepts
 
@@ -49,7 +52,7 @@ Line edit mode allows you to chain operators together and define lists without c
 
     'u'                    = undo last action
     'R'                    = redo last action
-    'cc' or 'C'            = clear the stack
+    'C', 'cc', or 'isc'    = clear the stack
     '<space>' or '<enter>' = push number/repeat last action
     '<delete>' or '<esc>'  = clear input line
     'Q'                    = quit
@@ -75,13 +78,19 @@ Note: The locations of the letters for addition, subtraction, and division are b
 
 ### Stack Manipulation
 
-    'op' = pop top element off of stack
-    'od' = duplicate first element on stack
-    'ow' = swap first two elements of stack
-    'ov' = reverse stack
-    'oo' = rotate stack (move bottom element to top)
-    'ou' = sum all numbers on the stack
-    'om' = multiply all numbers on the stack together
+    'op' or 'isp' = pop top element off of stack
+    'od' or 'isd' = duplicate first element on stack
+    'ow' or 'isw' = swap first two elements of stack
+    'ov' or 'isv' = reverse stack
+    'oo' or 'iso' = rotate stack (move bottom element to top)
+
+    'ou' or 'isu' = sum all numbers on the stack
+    'om' or 'ism' = multiply all numbers on the stack together
+
+    'y' = copy the bottom element to the aux stack
+    'Y' = move the bottom element to the aux stack
+    'p' = copy the bottom element of the aux stack to the stack
+    'P' = move the bottom element of the aux stack to the stack
 
 
 ### Functions
@@ -104,12 +113,19 @@ Note: The locations of the letters for addition, subtraction, and division are b
     'oac'          = arc cosine
     'oat'          = arc tangent
 
+    'ior'          = round a number to the nearest integer
+    'iof'          = floor a number
+    'ioc'          = ceil a number
+    'iodr'         = round the first number to the second number of digits after the decimal point
+    'ioe' or 'ol'  = fix small floating point errors
+
 
 ### Constants
 
     'cp'  = pi
     'ce'  = e
     'cq'  = square root of 2
+    'cs'  = distance between 1 and the next representable number
     'cn'  = nan
     'cip' = poitive infinity
     'cin' = negative infinity
@@ -129,20 +145,36 @@ Note: The locations of the letters for addition, subtraction, and division are b
     'ila'       = given two numbers, make new list containing all numbers from the first to the second, inclusive ("range" operator)
     'ilu'       = sum all numbers in the bottom list
     'ilm'       = multiply all numbers in the bottom list together
+    'ilc'       = add each item in the bottom list to all items before it
+    'ilv'       = reverse the items in the bottom list
+    'ill'       = get the length of the bottom list
+    'ilt'       = mirror a 2d list diagonally
+
+
+### Polynomials
+
+    'ipp' or 'ilp' = plug numbers in the first argument into the polynomial in the second argument
+    'ips'          = synthetic divide the polynomial in the second argument by the first argument
+    'ipd' or 'ipe' = divide the first polynomial by the second
+    'ipm' or 'ipr' = multiply the first polynomial with the second
+    'ipq'          = square a polynomial
 
 
 ### Registers
 
-    'y<letter>' = move the bottom element to register
-    'p<letter>' = copy the contents of register to the stack
+    'z<letter>' = copy the bottom element to register
+    'v<letter>' = copy the contents of register to the stack
 
 Note: \<letter\> can be any upper or lower case letter
 
+
 ### Functions
 
-    'ifi' or '[' = write a new function in line edit mode
+    'ifi' or '(' = write a new function in line edit mode
+
     'ifr'        = pop a function and run it on the current stack
     'iftr'       = pop a number and a function and run the function that number of times
+    'ifq'        = run a function on the second argument the third argument number of times, recording each result in a list
 
     'ifm'        = apply the function to all items in the current stack
     'ifnm'       = apply the function to all numbers in a nested list
@@ -150,12 +182,19 @@ Note: \<letter\> can be any upper or lower case letter
     'iff'        = fold the function across all items in the current stack
     'ifnf'       = fold the function across all numbers in a nested list
 
+    'irx'        = find the maxumum near the second argument, with a starting interval size of the third argument
+    'irn'        = find the minimum near the second argument, with a starting interval size of the third argument
+    'irz'        = find a zero between the bounds given in the second and third arguments
+
 
 ### Line Editing
 
     'I'                    = begin line editing
+    'u'                    = undo the previous action
     'ili' or '['           = If not in line edit mode, enter it. Begin writing a new list.
+    ']'                    = Insert ']'
     'ifi' or '('           = If not in line edit mode, enter it. Begin writing a new function.
+    ')'                    = Insert ')'
     '<left>'               = move left one operator/number
     '<right>'              = move right one operator/number
     '<space>' or '<enter>' = run current line and exit line edit mode
