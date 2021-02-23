@@ -62,6 +62,7 @@ impl Mode for History_mode {
             return;
         } else if op == "undo" && self.undo_id > 0 {
             self.undo_id -= 1;
+            self.lines.push("undo".to_string());
 
             let (line, stack) = &self.undos[self.undo_id];
 
@@ -70,6 +71,7 @@ impl Mode for History_mode {
             *ui.get_stack() = stack.clone();
         } else if op == "redo" && self.undo_id < self.undos.len() - 1 {
             self.undo_id += 1;
+            self.lines.push("redo".to_string());
 
             let (line, stack) = &self.undos[self.undo_id];
 
@@ -131,16 +133,14 @@ impl Mode for History_mode {
                 }
             }
             Character(' ') | Character('\n') => {
-                if self.op.is_empty() {
-                    self.op =
-                        if let Some(r) = state.remove("return") {
-                            r.into_string()
-                        } else if let Some(l) = self.lines.get(self.line_id) {
-                            l.clone()
-                        } else {
-                            String::new()
-                        };
-                }
+                self.op =
+                    if let Some(r) = state.remove("return") {
+                        r.into_string()
+                    } else if let Some(l) = self.lines.get(self.line_id) {
+                        l.clone()
+                    } else {
+                        String::new()
+                    };
 
                 msg.push(Return);
             }
