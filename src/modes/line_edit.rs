@@ -46,10 +46,14 @@ fn tokenize_rec(ui: &mut Ui, ops: &str) -> Vec<String> {
     let mut out = Vec::new();
 
     for (_, op) in ui.tokenize(ops) {
-        if &op[0..1] == "[" || &op[0..1] == "(" {
+        if &op[0..1] == "(" {
             out.push("(".to_string());
             out.append(&mut tokenize_rec(ui, &op[2..op.len() - 2]));
             out.push(")".to_string());
+        } else if &op[0..1] == "[" {
+            out.push("[".to_string());
+            out.append(&mut tokenize_rec(ui, &op[2..op.len() - 2]));
+            out.push("]".to_string());
         } else {
             out.push(op);
         }

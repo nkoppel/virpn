@@ -229,7 +229,7 @@ impl Ui {
     fn escape(&mut self, mode: &str) {
         while let Some((m, ..)) = self.callstack.last() {
             if m != mode {
-                self.mode_return(false);
+                self.mode_return(true);
             } else {
                 break;
             }

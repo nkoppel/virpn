@@ -48,10 +48,12 @@ impl Mode for Number_mode {
         let mut buffer = Data::unwrap_string_or(state.get("buffer"), String::new());
         let mut loc = Data::unwrap_usize_or(state.get("loc"), 0);
         let mut msg = Vec::new();
+        let mut ret = false;
 
         msg.push(EscBind(vec![KeyBackspace]));
         msg.push(EscBind(vec![KeyLeft]));
         msg.push(EscBind(vec![KeyRight]));
+        msg.push(EscBind(bind_from_str(" ")));
 
         match bind[0] {
             Character('a') => {buffer.insert(loc, '1'); loc += 1}
@@ -77,6 +79,9 @@ impl Mode for Number_mode {
                 }
             }
 
+            Character(' ') => {
+                ret = true;
+            }
             KeyLeft        => loc = loc.saturating_sub(1),
             KeyRight       => if loc < buffer.len() {loc += 1},
             KeyBackspace   => {
@@ -92,6 +97,10 @@ impl Mode for Number_mode {
 
         state.insert("buffer".to_string(), Str(buffer));
         state.insert("loc".to_string(), Uint(loc as u64));
+
+        if ret {
+            msg.push(Return);
+        }
 
         msg
     }
