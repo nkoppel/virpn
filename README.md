@@ -135,6 +135,7 @@ Note: The locations of the letters for addition, subtraction, and division are b
 
     '<up>' / '<down>' = browse previously entered lines
     '<enter>'         = run viewed line
+    'E'               = modify viewed line in line editor
 
 
 ### Lists
@@ -185,6 +186,9 @@ Note: \<letter\> can be any upper or lower case letter
     'irx'        = find the maxumum near the second argument, with a starting interval size of the third argument
     'irn'        = find the minimum near the second argument, with a starting interval size of the third argument
     'irz'        = find a zero between the bounds given in the second and third arguments
+
+    'ifa'        = approximate the integral of the function from the second argument to the third argument
+    'ifs'        = approximate the slope of the function at the second argument
 
 
 ### Line Editing

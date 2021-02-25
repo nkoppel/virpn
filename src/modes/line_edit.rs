@@ -42,14 +42,16 @@ fn find_matching_paren(s: &str) -> Option<usize> {
     None
 }
 
-fn tokenize_rec(ui: &mut Ui, ops: &str) -> Vec<(String, String)> {
+fn tokenize_rec(ui: &mut Ui, ops: &str) -> Vec<String> {
     let mut out = Vec::new();
 
-    for (mode, op) in ui.tokenize(ops) {
+    for (_, op) in ui.tokenize(ops) {
         if &op[0..1] == "[" || &op[0..1] == "(" {
-            out.append(&mut tokenize_rec(ui, &op[..]));
+            out.push("(".to_string());
+            out.append(&mut tokenize_rec(ui, &op[2..op.len() - 2]));
+            out.push(")".to_string());
         } else {
-            out.push((mode, op));
+            out.push(op);
         }
     }
 
@@ -76,15 +78,19 @@ impl Mode for Line_edit_mode {
     }
 
     fn eval_operators(&mut self, ui: &mut Ui, op: &str) {
-        ui.insert_mode(self.get_name(), Box::new(Line_edit_mode::new()));
-
         if op.len() >= 13 && op[0..12] == *"tokenize_rec" {
-            self.strs = tokenize_rec(ui, &op[13..])
-                .into_iter().map(|(_, x)| x).collect();
+            self.strs = tokenize_rec(ui, &op[13..]);
 
             self.strs_hist.clear();
             self.loc = self.strs.len();
+
+            ui.insert_mode(
+                self.get_name(),
+                Box::new(mem::replace(self, Line_edit_mode::new()))
+            );
         } else if let Some(m) = find_matching_paren(op) {
+            ui.insert_mode(self.get_name(), Box::new(Line_edit_mode::new()));
+
             if &op[0..1] == "(" {
                 ui.get_stack().push(Func(op[1..m - 1].trim().to_string()));
 
@@ -100,6 +106,8 @@ impl Mode for Line_edit_mode {
                 ui.eval(op[1..m].trim().to_string());
                 ui.get_stack().up();
             }
+        } else {
+            ui.insert_mode(self.get_name(), Box::new(Line_edit_mode::new()));
         }
     }
 
@@ -147,6 +155,10 @@ impl Mode for Line_edit_mode {
                 self.strs_hist.push((self.loc, self.strs.clone()));
                 self.strs.insert(self.loc, op);
                 self.loc += 1;
+            }
+
+            if !bind.is_empty() {
+                ret = true;
             }
         }
 
@@ -201,9 +213,6 @@ impl Mode for Line_edit_mode {
                     } else if self.strs.is_empty() {
                         ret = true;
                     }
-                }
-                Character('\n') => {
-                    ret = true;
                 }
                 Character(')') => {
                     self.strs_hist.push((self.loc, self.strs.clone()));

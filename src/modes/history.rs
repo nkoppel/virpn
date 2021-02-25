@@ -28,6 +28,7 @@ impl Mode for History_mode {
             bind_from_str("u"),
             bind_from_str("R"),
             bind_from_str("Q"),
+            bind_from_str("E"),
         ]
     }
 
@@ -105,6 +106,10 @@ impl Mode for History_mode {
         msg.push(EscBind(bind_from_str("\n")));
         msg.push(EscBind(bind_from_str("Q")));
 
+        msg.push(EscBind(vec![KeyLeft]));
+        msg.push(EscBind(vec![KeyRight]));
+        msg.push(EscBind(vec![KeyBackspace]));
+
         msg.push(AllowReplace(false));
 
         if bind.is_empty() {
@@ -147,6 +152,28 @@ impl Mode for History_mode {
                     };
 
                 msg.push(Return);
+            }
+            KeyLeft | KeyRight | KeyBackspace | Character('E') => {
+                let line =
+                    if let Some(r) = state.remove("return") {
+                        r.into_string()
+                    } else if let Some(l) = self.lines.get(self.line_id) {
+                        l.clone()
+                    } else {
+                        String::new()
+                    };
+
+                let mut state = HashMap::new();
+
+                state.insert("init".to_string(), Str(line));
+
+                msg.push(Call("line edit".to_string(), state));
+
+                msg.push(PressKeys(bind_from_str("I")));
+
+                if bind[0] != Character('E') {
+                    msg.push(PressKeys(vec![bind[0]]));
+                }
             }
             Character('\u{1b}') | KeyDC => {
                 self.line_id = self.lines.len().saturating_sub(1);

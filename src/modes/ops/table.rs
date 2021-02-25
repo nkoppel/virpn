@@ -307,7 +307,7 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("+"     , vec!["q", "+"        ], op_2(&|x, y| x + y)),
         ("-"     , vec!["w", "-"        ], op_2(&|x, y| x - y)),
         ("/"     , vec!["e", "/"        ], op_2(&|x, y| x / y)),
-        ("%"     , vec!["D", "E", "%"   ], op_2(&|x, y| x % y)),
+        ("%"     , vec!["D", "%"        ], op_2(&|x, y| x % y)),
         ("*"     , vec!["r", "*"        ], op_2(&|x, y| x * y)),
         ("^"     , vec!["t", "^"        ], op_2(&|x, y| x.powf(y))),
 
