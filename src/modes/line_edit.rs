@@ -61,6 +61,7 @@ fn tokenize_rec(ui: &mut Ui, ops: &str) -> Vec<String> {
 impl Mode for Line_edit_mode {
     fn get_bindings(&self) -> Vec<Vec<Input>> {
         vec![
+            bind_from_str("T"),
             bind_from_str("I"),
             bind_from_str("ili"),
             bind_from_str("ifi"),
@@ -70,7 +71,7 @@ impl Mode for Line_edit_mode {
     }
 
     fn get_operator_regex(&self) -> Regex {
-        Regex::new(r"^\(.*\)|^\[.*\]|^tokenize_rec .*").unwrap()
+        Regex::new(r"^\(.*\)|^\[.*\]|^tokenize_rec .*|^tokenize_stack").unwrap()
     }
 
     fn get_name(&self) -> String {
@@ -88,6 +89,24 @@ impl Mode for Line_edit_mode {
                 self.get_name(),
                 Box::new(mem::replace(self, Line_edit_mode::new()))
             );
+        } else if op == "tokenize_stack" {
+            if let Some(f) = ui.get_stack().pop_as_func() {
+                self.strs = tokenize_rec(ui, &format!("( {} )", f));
+
+                self.strs_hist.clear();
+                self.loc = self.strs.len();
+
+                ui.insert_mode(
+                    self.get_name(),
+                    Box::new(mem::replace(self, Line_edit_mode::new()))
+                );
+            } else {
+                ui.insert_mode(
+                    self.get_name(),
+                    Box::new(mem::replace(self, Line_edit_mode::new()))
+                );
+                return;
+            };
         } else if let Some(m) = find_matching_paren(op) {
             ui.insert_mode(self.get_name(), Box::new(Line_edit_mode::new()));
 
@@ -126,6 +145,7 @@ impl Mode for Line_edit_mode {
         msg.push(EscBind(vec![Character('\n')]));
         msg.push(EscBind(vec![Character(' ')]));
 
+        msg.push(EscBind(bind_from_str("T")));
         msg.push(EscBind(bind_from_str("I")));
         msg.push(EscBind(bind_from_str("u")));
         msg.push(EscBind(bind_from_str("ili")));
@@ -231,6 +251,12 @@ impl Mode for Line_edit_mode {
                         self.loc = l;
                         self.strs = s;
                     }
+                }
+                Character('T') => {
+                    msg.push(Eval("tokenize_stack".to_string()));
+                    msg.push(PressKeys(bind_from_str("I")));
+
+                    return msg;
                 }
                 _ => {}
             }

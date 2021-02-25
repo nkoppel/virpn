@@ -67,12 +67,12 @@ Note: Numbers will be pushed onto the stack when entering any operator.
 
 ### Basic Operators
 
-    'q' or '+'       = add
-    'w' or '-'       = subtract
-    'e' or '/'       = divide
-    'r' or '*'       = multiply
-    't' or '^'       = to the power of
-    'D', 'E', or '%' = modulus
+    'q' or '+' = add
+    'w' or '-' = subtract
+    'e' or '/' = divide
+    'r' or '*' = multiply
+    't' or '^' = to the power of
+    'D' or '%' = modulus
 
 Note: The locations of the letters for addition, subtraction, and division are based off of the keys below them.
 
@@ -172,6 +172,7 @@ Note: \<letter\> can be any upper or lower case letter
 ### Functions
 
     'ifi' or '(' = write a new function in line edit mode
+    'T'          = edit a function on the stack
 
     'ifr'        = pop a function and run it on the current stack
     'iftr'       = pop a number and a function and run the function that number of times
