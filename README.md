@@ -172,7 +172,6 @@ Note: \<letter\> can be any upper or lower case letter
 ### Functions
 
     'ifi' or '(' = write a new function in line edit mode
-    'T'          = edit a function on the stack
 
     'ifr'        = pop a function and run it on the current stack
     'iftr'       = pop a number and a function and run the function that number of times
@@ -196,6 +195,7 @@ Note: \<letter\> can be any upper or lower case letter
 
     'I'                    = begin line editing
     'u'                    = undo the previous action
+    'T'                    = edit an item on the stack
     'ili' or '['           = If not in line edit mode, enter it. Begin writing a new list.
     ']'                    = Insert ']'
     'ifi' or '('           = If not in line edit mode, enter it. Begin writing a new function.

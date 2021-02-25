@@ -172,7 +172,7 @@ pub fn print_stack(window: &Window, stack: &Stack) {
     let width = window.get_max_x() as usize;
     let height = window.get_max_y() - BOTTOM_BUFFER;
 
-    let s = stack.to_string(width, height as usize);
+    let s = stack.to_disp(width, height as usize);
     let mut lines = s.lines().rev();
 
     for y in (0..height).rev() {

@@ -90,8 +90,8 @@ impl Mode for Line_edit_mode {
                 Box::new(mem::replace(self, Line_edit_mode::new()))
             );
         } else if op == "tokenize_stack" {
-            if let Some(f) = ui.get_stack().pop_as_func() {
-                self.strs = tokenize_rec(ui, &format!("( {} )", f));
+            if let Some(i) = ui.get_stack().pop() {
+                self.strs = tokenize_rec(ui, &i.to_string());
 
                 self.strs_hist.clear();
                 self.loc = self.strs.len();
@@ -265,14 +265,13 @@ impl Mode for Line_edit_mode {
         let before = self.strs[..self.loc].join(" ");
         let after  = self.strs[self.loc..].join(" ");
 
-        msg.push(Print(
-            format!("{} {}", before, after),
-            if before.len() == 0 {
-                0
+        msg.push({
+            if before.is_empty() {
+                Print(after.clone(), 0)
             } else {
-                before.len() + 1
+                Print(format!("{} {}", before, after), before.len() + 1)
             }
-        ));
+        });
         msg.push(WrapText(before + " ", " ".to_string() + &after));
 
         if ret {

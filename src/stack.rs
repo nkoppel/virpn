@@ -202,16 +202,16 @@ impl Stack {
         Stack::apply_fold_vec(&self.curr, f, start)
     }
 
-    pub fn to_string(&self, width: usize, height: usize) -> String {
+    pub fn to_disp(&self, width: usize, height: usize) -> String {
         let strs: Vec<String> =
-            self.curr.iter().map(|x| x.to_string(0, width, height)).collect();
+            self.curr.iter().map(|x| x.to_disp(0, width, height)).collect();
 
         strs.join("\n")
     }
 }
 
 impl Item {
-    pub fn to_string(&self, indent: usize, width: usize, height: usize)
+    pub fn to_disp(&self, indent: usize, width: usize, height: usize)
         -> String
     {
         match self {
@@ -220,7 +220,7 @@ impl Item {
                 let mut strs = Vec::new();
 
                 for i in s.iter().rev() {
-                    let tmp = i.to_string(indent + 2, width, height);
+                    let tmp = i.to_disp(indent + 2, width, height);
                     len += tmp.len() + 1;
                     strs.push(tmp);
 
@@ -242,6 +242,22 @@ impl Item {
             },
             Num(n) => n.to_string(),
             Func(s) => format!("({})", s),
+        }
+    }
+
+    pub fn to_string(&self) -> String {
+        match self {
+            List(s) => {
+                let mut strs = Vec::new();
+
+                for i in s.iter() {
+                    strs.push(i.to_string());
+                }
+
+                format!("[ {} ]", strs.join(" "))
+            },
+            Num(n) => n.to_string(),
+            Func(s) => format!("( {} )", s),
         }
     }
 }
@@ -273,5 +289,13 @@ impl<'a> IntoIterator for &'a mut Stack {
 
     fn into_iter(self) -> IterMut<'a, Item> {
         self.curr.iter_mut()
+    }
+}
+
+use std::fmt;
+
+impl fmt::Display for Item {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "({})", self.to_string())
     }
 }
