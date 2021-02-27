@@ -1,3 +1,8 @@
+let term = document.getElementById("terminal");
+
+var width  = 80;
+var height = 40;
+
 async function init() {
     await wasm_bindgen();
     dynResize();
@@ -7,6 +12,7 @@ init();
 
 document.addEventListener("keydown", function (e) {
     wasm_bindgen.eval_key(e.key);
+    term.innerHTML = wasm_bindgen.render_html(width, height);
 })
 
 function dynResize() {
@@ -18,8 +24,7 @@ function dynResize() {
     width  = Math.trunc(window.innerWidth  / w - 2);
     height = Math.trunc(window.innerHeight / h - 1);
 
-    init_lines();
-    wasm_bindgen.show();
+    term.innerHTML = wasm_bindgen.render_html(width, height);
 }
 
 let doResize = true;
@@ -29,6 +34,6 @@ window.onresize = function () {
         dynResize();
 
         doResize = false;
-        setTimeout(() => {doResize = true}, 100);
+        setTimeout(() => {doResize = true}, 15);
     }
 }

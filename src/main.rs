@@ -7,14 +7,10 @@ mod data;
 mod interface;
 
 #[cfg(target_arch = "wasm32")]
-mod terminal;
-
-#[cfg(target_arch = "wasm32")]
 pub use wasm_bindgen::prelude::*;
 
-use crate::interface::*;
-
+#[cfg(not(target_arch = "wasm32"))]
 pub fn main() {
-    interface();
-    // debug_interface();
+    interface::interface();
+    // interface::debug_interface();
 }

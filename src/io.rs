@@ -1,8 +1,20 @@
-#[cfg(not(target_arch = "wasm32"))]
-use pancurses::{Input, Input::*, Window, noecho};
+#[cfg(target_arch = "wasm32")]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub enum Input {
+    Character(char),
+    KeyUp,
+    KeyDown,
+    KeyLeft,
+    KeyRight,
+    KeyDC,
+    KeyBackspace,
+}
 
 #[cfg(target_arch = "wasm32")]
-use crate::terminal::{Input, Input::*, Window};
+pub use Input::*;
+
+#[cfg(not(target_arch = "wasm32"))]
+pub use pancurses::{Input, Input::*, Window, initscr, endwin, noecho};
 
 use std::collections::HashMap;
 
@@ -134,22 +146,6 @@ impl<T> Bindings<T> where T: Clone {
 
         panic!("Unknown binding: {:?}", v);
     }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    #[allow(dead_code)]
-    pub fn read(&mut self, window: &Window)
-        -> (Vec<Input>, T)
-    {
-        window.keypad(true);
-        noecho();
-
-        loop {
-            match self.add(window.getch().unwrap()) {
-                None => {}
-                Some(out) => return (self.out_buf.clone(), out),
-            }
-        }
-    }
 }
 
 pub fn bind_from_str(s: &str) -> Vec<Input> {
@@ -162,10 +158,12 @@ pub fn bind_from_str(s: &str) -> Vec<Input> {
     out
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 use crate::stack::*;
 
-const BOTTOM_BUFFER: i32 = 2;
+pub const BOTTOM_BUFFER: i32 = 2;
 
+#[cfg(not(target_arch = "wasm32"))]
 pub fn print_stack(window: &Window, stack: &Stack) {
     let (starty, startx) = window.get_cur_yx();
 
@@ -191,11 +189,48 @@ pub fn print_stack(window: &Window, stack: &Stack) {
     window.refresh();
 }
 
+pub fn render_command(cmd: &str, cursor_loc: usize, width: usize)
+    -> (String, usize)
+{
+    let len = cmd.len();
+
+    if len >= width {
+        let before_width = width * 2 / 3;
+        let after_width  = width / 3;
+
+        if cursor_loc > len {
+            (
+                format!("<{}", &cmd[len - width..]),
+                width - 1
+            )
+        } else if len - cursor_loc < after_width {
+            (
+                format!("<{}", &cmd[len - width + 1..]),
+                width - (len - cursor_loc)
+            )
+        } else if cursor_loc < before_width {
+            (
+                format!("{}>", &cmd[0..width - 1]),
+                cursor_loc
+            )
+        } else {
+            let start = cursor_loc - before_width + 1;
+            let end = cursor_loc + after_width - 1;
+
+            (
+                format!("<{}>", &cmd[start..end]),
+                before_width
+            )
+        }
+    } else {
+        (cmd.to_string(), cursor_loc)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 pub fn print_command(window: &Window, cmd: &str, cursor_loc: usize) {
     let width  = window.get_max_x() as usize;
     let height = window.get_max_y();
-
-    let len = cmd.len();
 
     window.mv(height - 2, 0);
     window.addstr(&"=".repeat(width));
@@ -203,29 +238,10 @@ pub fn print_command(window: &Window, cmd: &str, cursor_loc: usize) {
     window.mv(height - 1, 0);
     window.clrtoeol();
 
-    if len >= width {
-        let before_width = width * 2 / 3;
-        let after_width  = width / 3;
-        
-        if cursor_loc > len {
-            window.addstr(&format!("<{}", cmd[len - width..].to_string()));
-            window.mv(height - 1, (width - 1) as i32);
-        } else if len - cursor_loc < after_width {
-            window.addstr(&format!("<{}", cmd[len - width + 1..].to_string()));
-            window.mv(height - 1, (width - (len - cursor_loc)) as i32);
-        } else if cursor_loc < before_width {
-            window.addstr(&format!("{}>", cmd[0..width - 1].to_string()));
-            window.mv(height - 1, cursor_loc as i32);
-        } else {
-            let start = cursor_loc - before_width + 1;
-            let end = cursor_loc + after_width - 1;
-            window.addstr(&format!("<{}>", cmd[start..end].to_string()));
-            window.mv(height - 1, before_width as i32);
-        }
-    } else {
-        window.addstr(cmd);
-        window.mv(height - 1, cursor_loc as i32);
-    }
+    let (rend, loc) = render_command(cmd, cursor_loc, width);
+
+    window.addstr(&rend);
+    window.mv(height - 1, loc as i32);
 
     window.refresh();
 }

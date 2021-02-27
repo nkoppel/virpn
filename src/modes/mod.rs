@@ -15,12 +15,6 @@ use self::{
     line_edit::Line_edit_mode
 };
 
-#[cfg(not(target_arch = "wasm32"))]
-pub use pancurses::{Input, Input::*, Window};
-
-#[cfg(target_arch = "wasm32")]
-pub use crate::terminal::{Input, Input::*, Window};
-
 pub use regex::Regex;
 
 pub use std::mem;
@@ -75,8 +69,8 @@ pub struct Ui {
     bindings: Bindings<(bool, String)>,
     modes: HashMap<String, Box<dyn Mode + Send + Sync>>,
     pub exit: bool,
-    print: String,
-    cursor: usize,
+    pub print: String,
+    pub cursor: usize,
     stack: Stack,
     callstack: Vec<(String, State, bool, ModeBinds, (String, String))>,
     nextkey: bool,
@@ -374,7 +368,9 @@ impl Ui {
         println!();
     }
 
-    pub fn show(&self, window: &Window) {
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn show(&self, window: &pancurses::Window) {
         print_stack(&window, &self.stack);
         print_command(&window, &self.print, self.cursor);
     }
