@@ -15,6 +15,32 @@ A web build of virpn can be found [here](https://nkoppel.github.io/virpn).
 - Undo and redo
 - Polynomial and Calculus operations
 
+## Installation
+
+Cargo can be installed at [rustup.rs](https://rustup.rs)
+
+To install the nightly compiler
+
+    $ rustup toolchain install nightly
+
+
+To install in ~/.cargo/bin
+
+    $ git clone https://github.com/nkoppel/virpn
+    $ cd virpn
+    $ cargo +nightly install --path . --force
+
+
+To build for the web (this will output the webpage in virpn/www)
+
+    $ git clone https://github.com/nkoppel/virpn
+    $ cd virpn
+    
+    $ rustup target add --toolchain nightly wasm32-unknown-unknown
+    $ cargo install wasm-pack
+    
+    $ sh build_wasm.sh
+
 ## Concepts
 
 ### Operators
