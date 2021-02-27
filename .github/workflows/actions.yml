@@ -1,0 +1,53 @@
+name: Actions
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  clippy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install nightly toolchain
+      run:
+        rustup toolchain install nightly;
+        rustup default nightly
+
+    - name: Install clippy
+      run: rustup component add clippy
+
+    - name: Run clippy
+      run: cargo clippy
+
+  deploy-web:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: jetli/wasm-pack-action@v0.3.0
+    - uses: actions/checkout@master
+
+    - name: Install nightly toolchain
+      run:
+        rustup toolchain install nightly;
+        rustup default nightly
+
+    - name: Build with wasm-pack
+      run: sh build_wasm.sh
+
+    - name: Push build in www directory to nkoppel.github.io
+      uses: cpina/github-action-push-to-another-repository@master
+      env:
+        API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+      with:
+        source-directory: 'www'
+        destination-github-username: 'nkoppel'
+        destination-repository-name: 'nkoppel.github.io'
+        user-email: 'nathankoppel0@gmail.com'
