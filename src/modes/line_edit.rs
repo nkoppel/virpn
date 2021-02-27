@@ -170,19 +170,14 @@ impl Mode for Line_edit_mode {
             return msg;
         }
 
-        if  bind.is_empty() ||
-            bind == bind_from_str(" ") ||
-            bind == bind_from_str("\n")
-        {
-            if let Some(Str(op)) = state.remove("return") {
-                self.strs_hist.push((self.loc, self.strs.clone()));
-                self.strs.insert(self.loc, op);
-                self.loc += 1;
-            }
+        if let Some(Str(op)) = state.remove("return") {
+            self.strs_hist.push((self.loc, self.strs.clone()));
+            self.strs.insert(self.loc, op);
+            self.loc += 1;
+        }
 
-            if !bind.is_empty() {
-                ret = true;
-            }
+        if bind == bind_from_str(" ") || bind == bind_from_str("\n") {
+            ret = true;
         }
 
         if bind == bind_from_str("(") || bind == bind_from_str("ifi") {

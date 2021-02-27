@@ -177,6 +177,10 @@ impl Mode for History_mode {
             }
             Character('\u{1b}') | KeyDC => {
                 self.line_id = self.lines.len().saturating_sub(1);
+
+                self.op.clear();
+                state.remove("return");
+
                 msg.push(Print(String::new(), 0));
                 msg.push(Return);
             }
