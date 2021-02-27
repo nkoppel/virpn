@@ -1,3 +1,3 @@
-wasm-pack build -t no-modules -d www --release
-mv www/virpn_bg.wasm www/index_bg.wasm
-rm www/*.ts
+wasm-pack build -t no-modules -d www/virpn --release
+mv www/virpn/virpn_bg.wasm www/virpn/index_bg.wasm
+rm www/virpn/*.ts

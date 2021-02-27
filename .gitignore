@@ -1,6 +1,9 @@
 *.txt
 /target
 **/*.rs.bk
-www/virpn.js
-www/*.ts
-www/*.wasm
+/www/virpn/virpn.js
+/www/virpn/README.md
+/www/virpn/.bin
+/www/virpn/.gitignore
+/www/virpn/*.ts
+/www/virpn/*.wasm
