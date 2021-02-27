@@ -104,12 +104,12 @@ impl<T> Bindings<T> where T: Clone {
     }
 
     pub fn add(&mut self, i: Input) -> Option<T> {
-        self.buf.push(i.clone());
+        self.buf.push(i);
 
         match self.tree.get(self.buf.iter()) {
             (Some(out), _) => {
                 self.out_buf = std::mem::replace(&mut self.buf, Vec::new());
-                Some(out.clone())
+                Some(out)
             }
             (None, valid_prefix) => {
                 if !valid_prefix {
@@ -124,7 +124,7 @@ impl<T> Bindings<T> where T: Clone {
         }
     }
 
-    pub fn read_from_vec(&mut self, v: &Vec<Input>) -> (Vec<Input>, T) {
+    pub fn read_from_vec(&mut self, v: &[Input]) -> (Vec<Input>, T) {
         for c in v {
             match self.add(*c) {
                 None => {}
@@ -205,7 +205,7 @@ pub fn print_command(window: &Window, cmd: &str, cursor_loc: usize) {
 
     if len >= width {
         let before_width = width * 2 / 3;
-        let after_width  = width * 1 / 3;
+        let after_width  = width / 3;
         
         if cursor_loc > len {
             window.addstr(&format!("<{}", cmd[len - width..].to_string()));

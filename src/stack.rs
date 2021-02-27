@@ -25,7 +25,7 @@ impl Stack {
     pub fn from_nums(v: Vec<f64>) -> Self {
         Stack {
             above: Vec::new(),
-            curr: v.into_iter().map(|x| Num(x)).collect(),
+            curr: v.into_iter().map(Num).collect(),
         }
     }
 
@@ -80,7 +80,7 @@ impl Stack {
     }
 
     pub fn up(&mut self) {
-        let mut tmp = self.above.pop().unwrap_or(Vec::new());
+        let mut tmp = self.above.pop().unwrap_or_default();
         std::mem::swap(&mut tmp, &mut self.curr);
         self.curr.push(List(tmp));
     }
@@ -106,7 +106,7 @@ impl Stack {
         self.curr = tmp.into_iter().rev().collect();
     }
 
-    pub fn last<'a>(&'a self) -> Option<&'a Item> {
+    pub fn last(&self) -> Option<&Item> {
         self.curr.last()
     }
 
@@ -182,7 +182,7 @@ impl Stack {
         }
     }
 
-    pub fn apply_fold_vec(v: &Vec<Item>,
+    pub fn apply_fold_vec(v: &[Item],
                          f: &impl Fn(f64, f64) -> f64,
                          mut state: f64) -> f64
     {
@@ -244,22 +244,6 @@ impl Item {
             Func(s) => format!("({})", s),
         }
     }
-
-    pub fn to_string(&self) -> String {
-        match self {
-            List(s) => {
-                let mut strs = Vec::new();
-
-                for i in s.iter() {
-                    strs.push(i.to_string());
-                }
-
-                format!("[ {} ]", strs.join(" "))
-            },
-            Num(n) => n.to_string(),
-            Func(s) => format!("( {} )", s),
-        }
-    }
 }
 
 use std::vec::IntoIter;
@@ -296,6 +280,25 @@ use std::fmt;
 
 impl fmt::Display for Item {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.to_string())
+        match self {
+            List(s) => {
+                let mut strs = Vec::new();
+
+                for i in s.iter() {
+                    strs.push(i.to_string());
+                }
+
+                write!(f, "[ {} ]", strs.join(" "))
+            },
+            Num(n) => write!(f, "{}", n),
+            Func(s) => write!(f, "( {} )", s),
+        }
+    }
+}
+
+
+impl Default for Stack {
+    fn default() -> Self {
+        Self::new()
     }
 }

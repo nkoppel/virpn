@@ -67,6 +67,9 @@ pub enum Message {
 
 pub use Message::*;
 
+type ModeBinds = Bindings<(bool, String)>;
+
+#[allow(clippy::type_complexity)]
 pub struct Ui {
     operator_regexes: Vec<(Regex, String)>,
     bindings: Bindings<(bool, String)>,
@@ -75,7 +78,7 @@ pub struct Ui {
     print: String,
     cursor: usize,
     stack: Stack,
-    callstack: Vec<(String, State, bool, Bindings<(bool, String)>, (String, String))>,
+    callstack: Vec<(String, State, bool, ModeBinds, (String, String))>,
     nextkey: bool,
 }
 
@@ -124,7 +127,7 @@ impl Ui {
         ])
     }
 
-    pub fn get_stack<'a>(&'a mut self) -> &'a mut Stack {
+    pub fn get_stack(&mut self) -> &mut Stack {
         &mut self.stack
     }
 
@@ -182,7 +185,7 @@ impl Ui {
         (left, right)
     }
 
-    fn get_bindings<'a>(&'a mut self) -> &'a mut Bindings<(bool, String)> {
+    fn get_bindings(&mut self) -> &mut ModeBinds {
         if let Some((.., b, _)) = self.callstack.last_mut() {
             b
         } else {
@@ -192,7 +195,8 @@ impl Ui {
 
     fn run_mode(&mut self, bind: Vec<Input>) -> bool {
         if let Some((m, mut state, repl, binds, wrap)) = self.callstack.pop() {
-            let mut mode = self.modes.remove(&m).expect(&format!("{}", m));
+            let mut mode = self.modes.remove(&m)
+                .unwrap_or_else(|| panic!("{}", m));
             let messages = mode.eval_binding(&mut state, bind);
 
             self.modes.insert(m.clone(), mode);
@@ -214,7 +218,6 @@ impl Ui {
 
             if let Some((_, state, ..)) = self.callstack.last_mut() {
                 state.insert("return".to_string(), Str(s));
-                mem::drop(state);
 
                 if call {
                     self.run_mode(Vec::new());

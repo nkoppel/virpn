@@ -1,6 +1,6 @@
 use crate::modes::*;
 
-pub type Op = Box<dyn Fn(&mut Stack) -> () + Sync + Send>;
+pub type Op = Box<dyn Fn(&mut Stack) + Sync + Send>;
 
 pub fn basic<T>(f: &'static (impl Fn(&mut Stack) -> T + Sync + Send)) -> Op {
     Box::new(move |stack: &mut Stack| {f(stack);})

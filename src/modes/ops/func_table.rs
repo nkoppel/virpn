@@ -51,8 +51,6 @@ fn integrate_rects(ui: &mut Ui) {
     stack.push(List(multipliers));
     stack.push(List(inputs));
 
-    mem::drop(stack);
-
     ui.eval(f);
     ui.eval("* sum_list".to_string());
 
@@ -82,8 +80,6 @@ fn euler_approx(log: bool, ui: &mut Ui) {
 
     let delta = (endx - x) / steps as f64;
     let mut out = Stack::new();
-
-    mem::drop(stack);
 
     for _ in 0..steps {
         ui.get_stack().push(Num(x));
@@ -118,7 +114,7 @@ fn derivative_at(ui: &mut Ui) {
     let y = ui.get_stack().pop_as_num().unwrap();
 
     ui.get_stack().push(Num(x2));
-    ui.eval(f.clone());
+    ui.eval(f);
     let y2 = ui.get_stack().pop_as_num().unwrap();
 
     ui.get_stack().push(Num((y2 - y) / d));
@@ -133,8 +129,6 @@ fn sequence(ui: &mut Ui) {
 
     stack.down();
     stack.push(x);
-
-    mem::drop(stack);
 
     for _ in 0..n as usize {
         let item = ui.get_stack().last().unwrap().clone();

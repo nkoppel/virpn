@@ -55,7 +55,7 @@ impl Op_mode {
 
 impl Mode for Op_mode {
     fn get_bindings(&self) -> Vec<Vec<Input>> {
-        self.bindings.keys().map(|x| x.clone()).collect()
+        self.bindings.keys().cloned().collect()
     }
 
     fn get_operator_regex(&self) -> Regex {
@@ -65,8 +65,7 @@ impl Mode for Op_mode {
         let mut names: Vec<String> =
             names.into_iter().map(|x| escape(&x[..])).collect();
 
-        // sort in order of descending length
-        names.sort_by(|x, y| y.len().cmp(&x.len()));
+        names.sort_by_key(|x| std::cmp::Reverse(x.len()));
 
         Regex::new(&format!("^{}", names.join("|^"))).unwrap()
     }
@@ -78,7 +77,7 @@ impl Mode for Op_mode {
     fn eval_operators(&mut self, ui: &mut Ui, op: &str) {
         if let Some(f) = self.ops.get(op) {
             f(ui.get_stack());
-        } else if let Some(_) = self.func_ops.get(op) {
+        } else if self.func_ops.get(op).is_some() {
             let f = self.func_ops.get(op).unwrap().clone();
 
             ui.insert_mode(

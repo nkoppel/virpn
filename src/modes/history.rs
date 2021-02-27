@@ -41,7 +41,7 @@ impl Mode for History_mode {
     }
 
     fn eval_operators(&mut self, ui: &mut Ui, ops: &str) {
-        let spc = ops.find(' ').unwrap_or(ops.len());
+        let spc = ops.find(' ').unwrap_or_else(|| ops.len());
         let op = &ops[0..spc];
 
         if op == "history_add" {
@@ -63,7 +63,7 @@ impl Mode for History_mode {
                 Box::new(mem::replace(self, History_mode::new()))
             );
 
-            ui.eval(ops.clone());
+            ui.eval(ops);
             return;
         } else if op == "undo" && self.undo_id > 0 {
             self.undo_id -= 1;
@@ -211,7 +211,7 @@ impl Mode for History_mode {
         let op = mem::replace(&mut self.op, String::new());
 
         if op == "undo" || op == "redo" {
-            op.clone()
+            op
         } else {
             format!("history_add {}", op)
         }

@@ -31,9 +31,8 @@ impl Mode for Number_mode {
     }
 
     fn eval_operators(&mut self, ui: &mut Ui, op: &str) {
-        match op.parse::<f64>() {
-            Ok(f) => ui.get_stack().push(Num(f)),
-            Err(_) => ()
+        if let Ok(f) = op.parse::<f64>() {
+             ui.get_stack().push(Num(f));
         }
 
         ui.insert_mode(

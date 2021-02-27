@@ -281,7 +281,7 @@ fn transpose(stack: &mut Stack) {
 
     let new_stack = Stack::from_vec(l);
     stack.push(
-        new_stack.apply_map(&|l| List(l.into_iter().map(|x| Num(x)).collect()))
+        new_stack.apply_map(&|l| List(l.into_iter().map(Num).collect()))
     );
 }
 

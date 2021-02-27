@@ -109,8 +109,7 @@ impl Mode for Line_edit_mode {
                     self.get_name(),
                     Box::new(mem::replace(self, Line_edit_mode::new()))
                 );
-                return;
-            };
+            }
         } else if let Some(m) = find_matching_paren(op) {
             ui.insert_mode(self.get_name(), Box::new(Line_edit_mode::new()));
 

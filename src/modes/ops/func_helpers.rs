@@ -1,8 +1,8 @@
 use crate::modes::*;
 
-pub type FuncOp = Arc<dyn Fn(&mut Ui) -> () + Send + Sync>;
+pub type FuncOp = Arc<dyn Fn(&mut Ui) + Send + Sync>;
 
-fn solver<'a, F>(op: &'static F, start: f64, end: f64) -> FuncOp
+fn solver<F>(op: &'static F, start: f64, end: f64) -> FuncOp
     where F: Fn(f64, f64, f64) -> bool + Send + Sync
 {
     Arc::new(move |ui: &mut Ui| {
@@ -55,7 +55,7 @@ fn solver<'a, F>(op: &'static F, start: f64, end: f64) -> FuncOp
     })
 }
 
-pub fn range_solver<'a, F>(op: &'static F) -> FuncOp
+pub fn range_solver<F>(op: &'static F) -> FuncOp
     where F: Fn(f64, f64, f64) -> bool + Send + Sync
 {
     Arc::new(move |ui: &mut Ui| {
@@ -68,14 +68,13 @@ pub fn range_solver<'a, F>(op: &'static F) -> FuncOp
     })
 }
 
+#[allow(clippy::float_cmp)]
 pub fn optimize(max: bool, ui: &mut Ui) {
     let stack = ui.get_stack();
 
     let mut step = if let Some(n) = stack.pop_as_num () {n} else {return};
     let mut loc  = if let Some(n) = stack.pop_as_num () {n} else {return};
     let     f    = if let Some(f) = stack.pop_as_func() {f} else {return};
-
-    mem::drop(stack);
 
     ui.get_stack().push(Num(loc));
     ui.eval(f.clone());
@@ -130,7 +129,7 @@ pub fn optimize(max: bool, ui: &mut Ui) {
     }
 
     ui.get_stack().push(Num(loc));
-    ui.eval(f.clone());
+    ui.eval(f);
     let a = if let Some(n) = ui.get_stack().pop_as_num() {n} else {return};
 
     ui.get_stack().push(List(vec![Num(loc), Num(a)]));
