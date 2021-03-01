@@ -66,8 +66,8 @@ impl Mode for Number_mode {
             Character('l') => {buffer.insert(loc, '9'); loc += 1}
             Character(';') => {buffer.insert(loc, '0'); loc += 1}
             Character('n') => {
-                if loc == 0 {
-                    buffer.insert(loc, '-');
+                if loc == 0 && !buffer.contains('-') {
+                    buffer.insert(0, '-');
                     loc = 1
                 }
             }

@@ -5,6 +5,7 @@ pub struct Line_edit_mode {
     loc: usize,
     strs: Vec<String>,
     strs_hist: Vec<(usize, Vec<String>)>,
+    tokenize_num: bool
 } 
 
 impl Line_edit_mode {
@@ -13,6 +14,7 @@ impl Line_edit_mode {
             loc: 0,
             strs: Vec::new(),
             strs_hist: Vec::new(),
+            tokenize_num: false
         }
     }
 }
@@ -106,6 +108,10 @@ impl Mode for Line_edit_mode {
                 self.strs_hist.clear();
                 self.loc = self.strs.len();
 
+                if let Num(_) = i {
+                    self.tokenize_num = true;
+                }
+
                 ui.insert_mode(
                     self.get_name(),
                     Box::new(mem::replace(self, Line_edit_mode::new()))
@@ -149,7 +155,8 @@ impl Mode for Line_edit_mode {
         -> Vec<Message>
     {
         let mut msg = Vec::new();
-        let mut ret = false;
+        let mut msg_after = Vec::new();
+        let mut t_flag = true;
 
         msg.push(AllowReplace(false));
 
@@ -183,13 +190,38 @@ impl Mode for Line_edit_mode {
         }
 
         if let Some(Str(op)) = state.remove("return") {
-            self.strs_hist.push((self.loc, self.strs.clone()));
-            self.strs.insert(self.loc, op);
-            self.loc += 1;
+            if !op.is_empty() {
+                self.strs_hist.push((self.loc, self.strs.clone()));
+                self.strs.insert(self.loc, op);
+                self.loc += 1;
+            }
+        }
+
+        if self.tokenize_num ||
+            (bind == bind_from_str("T") &&
+             self.loc < self.strs.len() &&
+             self.strs[self.loc].parse::<f64>().is_ok())
+        {
+            let mut state = HashMap::new();
+            let s = self.strs.remove((self.loc).min(self.strs.len() - 1));
+
+            if self.tokenize_num {
+                self.loc -= 1;
+            }
+
+            state.insert("loc".to_string(), Uint(s.len() as u64));
+            state.insert("buffer".to_string(), Str(s.clone()));
+
+            msg_after.push(Call("number".to_string(), state));
+            msg_after.push(PressKeys(vec![Character('a'), KeyBackspace]));
+            msg_after.push(Print(s.clone(), s.len()));
+
+            self.tokenize_num = false;
+            t_flag = false;
         }
 
         if bind == bind_from_str(" ") || bind == bind_from_str("\n") {
-            ret = true;
+            msg_after.push(Return);
         }
 
         if bind == bind_from_str("(") || bind == bind_from_str("ifi") {
@@ -223,7 +255,7 @@ impl Mode for Line_edit_mode {
                         self.strs.remove(self.loc);
                         self.strs_hist.push((self.loc, self.strs.clone()));
                     } else if self.strs.is_empty() {
-                        ret = true;
+                        msg_after.push(Return);
                     }
                 }
                 KeyBackspace => {
@@ -241,7 +273,7 @@ impl Mode for Line_edit_mode {
 
                         self.strs_hist.push((self.loc, self.strs.clone()));
                     } else if self.strs.is_empty() {
-                        ret = true;
+                        msg_after.push(Return);
                     }
                 }
                 Character(')') => {
@@ -263,10 +295,12 @@ impl Mode for Line_edit_mode {
                     }
                 }
                 Character('T') => {
-                    msg.push(Eval("tokenize_stack".to_string()));
-                    msg.push(PressKeys(bind_from_str("I")));
+                    if t_flag {
+                        msg.push(Eval("tokenize_stack".to_string()));
+                        msg.push(PressKeys(bind_from_str("I")));
 
-                    return msg;
+                        return msg;
+                    }
                 }
                 _ => {}
             }
@@ -282,11 +316,15 @@ impl Mode for Line_edit_mode {
                 Print(format!("{} {}", before, after), before.len() + 1)
             }
         });
-        msg.push(WrapText(before + " ", " ".to_string() + &after));
+        msg.push({
+            if before.is_empty() {
+                WrapText(String::new(), " ".to_string() + &after)
+            } else {
+                WrapText(before + " ", " ".to_string() + &after)
+            }
+        });
 
-        if ret {
-            msg.push(Return);
-        }
+        msg.append(&mut msg_after);
 
         msg
     }
