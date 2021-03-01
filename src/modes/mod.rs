@@ -137,7 +137,7 @@ impl Ui {
                     let end = mat.end();
 
                     out.push( (m.to_string(), ops[..end].to_string()) );
-                    ops = &ops[(end + 1).min(ops.len())..];
+                    ops = &ops[(end + 1).min(ops.len())..].trim();
 
                     ran = true;
                     break;

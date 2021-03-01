@@ -47,13 +47,19 @@ fn tokenize_rec(ui: &mut Ui, ops: &str) -> Vec<String> {
 
     for (_, op) in ui.tokenize(ops) {
         if &op[0..1] == "(" {
+            let loc = find_matching_paren(&op).unwrap();
+
             out.push("(".to_string());
-            out.append(&mut tokenize_rec(ui, &op[2..op.len() - 2]));
+            out.append(&mut tokenize_rec(ui, &op[2..loc - 1]));
             out.push(")".to_string());
+            out.append(&mut tokenize_rec(ui, &op[(loc + 2).min(op.len())..]));
         } else if &op[0..1] == "[" {
+            let loc = find_matching_paren(&op).unwrap();
+
             out.push("[".to_string());
-            out.append(&mut tokenize_rec(ui, &op[2..op.len() - 2]));
+            out.append(&mut tokenize_rec(ui, &op[2..loc - 1]));
             out.push("]".to_string());
+            out.append(&mut tokenize_rec(ui, &op[(loc + 2).min(op.len())..]));
         } else {
             out.push(op);
         }
@@ -127,6 +133,12 @@ impl Mode for Line_edit_mode {
                 ui.get_stack().down();
                 ui.eval(op[1..m].trim().to_string());
                 ui.get_stack().up();
+
+                ui.eval(
+                    op[(m + 1).min(op.len())..]
+                        .trim()
+                        .to_string()
+                );
             }
         } else {
             ui.insert_mode(self.get_name(), Box::new(Line_edit_mode::new()));
