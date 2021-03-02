@@ -4,22 +4,19 @@ use crate::modes::*;
 #[derive(Clone, Debug)]
 pub struct Number_mode {}
 
+const NUM_CHRS: &'static str = ";asdfghjkl";
+
 impl Mode for Number_mode {
     fn get_bindings(&self) -> Vec<Vec<Input>> {
-        vec![
-            vec![Character('a')],
-            vec![Character('s')],
-            vec![Character('d')],
-            vec![Character('f')],
-            vec![Character('g')],
-            vec![Character('h')],
-            vec![Character('j')],
-            vec![Character('k')],
-            vec![Character('l')],
-            vec![Character(';')],
-            vec![Character('n')],
-            vec![Character('m')],
-        ]
+        let mut out: Vec<_> = NUM_CHRS
+            .chars()
+            .map(|c| vec![Character(c)])
+            .collect();
+
+        out.push(vec![Character('n')]);
+        out.push(vec![Character('m')]);
+
+        out
     }
 
     fn get_operator_regex(&self) -> Regex {
@@ -55,16 +52,6 @@ impl Mode for Number_mode {
         msg.push(EscBind(bind_from_str(" ")));
 
         match bind[0] {
-            Character('a') => {buffer.insert(loc, '1'); loc += 1}
-            Character('s') => {buffer.insert(loc, '2'); loc += 1}
-            Character('d') => {buffer.insert(loc, '3'); loc += 1}
-            Character('f') => {buffer.insert(loc, '4'); loc += 1}
-            Character('g') => {buffer.insert(loc, '5'); loc += 1}
-            Character('h') => {buffer.insert(loc, '6'); loc += 1}
-            Character('j') => {buffer.insert(loc, '7'); loc += 1}
-            Character('k') => {buffer.insert(loc, '8'); loc += 1}
-            Character('l') => {buffer.insert(loc, '9'); loc += 1}
-            Character(';') => {buffer.insert(loc, '0'); loc += 1}
             Character('n') => {
                 if loc == 0 && !buffer.contains('-') {
                     buffer.insert(0, '-');
@@ -87,6 +74,12 @@ impl Mode for Number_mode {
                 if loc != 0 {
                     loc -= 1;
                     buffer.remove(loc);
+                }
+            }
+            Character(c) => {
+                if let Some(i) = NUM_CHRS.find(c) {
+                    buffer.insert_str(loc, &i.to_string());
+                    loc += 1;
                 }
             }
             _ => {}
