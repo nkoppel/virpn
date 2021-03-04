@@ -211,8 +211,12 @@ impl Stack {
 }
 
 fn show_number(n: f64) -> String {
-    if n == 0. && n.is_sign_negative() {
-        "-0".to_string()
+    if n == 0. {
+        if n.is_sign_positive() {
+            "0".to_string()
+        } else {
+            "-0".to_string()
+        }
     } else if n.abs() >= 1e12 || n.abs() <= 1e-12 {
         format!("{:e}", n)
     } else {
