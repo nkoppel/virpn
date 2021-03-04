@@ -12,7 +12,7 @@ impl Var_mode {
     pub fn new() -> Self {
         Var_mode {
             aux_stack: Vec::new(),
-            values: vec![Num(0.); 52]
+            values: vec![Num(0.); VAR_NAMES.len()]
         }
     }
 }

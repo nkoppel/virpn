@@ -94,23 +94,23 @@ impl Mode for History_mode {
     fn eval_binding(&mut self, state: &mut State, bind: Vec<Input>)
         -> Vec<Message>
     {
-        let mut msg = Vec::new();
+        let mut msg = vec![
+            EscBind(vec![KeyUp]),
+            EscBind(vec![KeyDown]),
+            EscBind(vec![Character('\u{1b}')]),
+            EscBind(vec![KeyDC]),
+            EscBind(bind_from_str("u")),
+            EscBind(bind_from_str("R")),
+            EscBind(bind_from_str(" ")),
+            EscBind(bind_from_str("\n")),
+            EscBind(bind_from_str("Q")),
 
-        msg.push(EscBind(vec![KeyUp]));
-        msg.push(EscBind(vec![KeyDown]));
-        msg.push(EscBind(vec![Character('\u{1b}')]));
-        msg.push(EscBind(vec![KeyDC]));
-        msg.push(EscBind(bind_from_str("u")));
-        msg.push(EscBind(bind_from_str("R")));
-        msg.push(EscBind(bind_from_str(" ")));
-        msg.push(EscBind(bind_from_str("\n")));
-        msg.push(EscBind(bind_from_str("Q")));
+            EscBind(vec![KeyLeft]),
+            EscBind(vec![KeyRight]),
+            EscBind(vec![KeyBackspace]),
 
-        msg.push(EscBind(vec![KeyLeft]));
-        msg.push(EscBind(vec![KeyRight]));
-        msg.push(EscBind(vec![KeyBackspace]));
-
-        msg.push(AllowReplace(false));
+            AllowReplace(false),
+        ];
 
         if bind.is_empty() {
             self.op =

@@ -4,7 +4,7 @@ use crate::modes::*;
 #[derive(Clone, Debug)]
 pub struct Number_mode {}
 
-const NUM_CHRS: &'static str = ";asdfghjkl";
+const NUM_CHRS: &str = ";asdfghjkl";
 
 impl Mode for Number_mode {
     fn get_bindings(&self) -> Vec<Vec<Input>> {

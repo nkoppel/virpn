@@ -3,6 +3,9 @@ use crate::modes::*;
 use crate::modes::ops::helpers::*;
 use crate::io::bind_from_str;
 
+use std::f64::consts;
+use std::f64;
+
 fn add(stack: &mut Stack) {op_2(&|x, y| x + y)(stack)}
 fn sub(stack: &mut Stack) {op_2(&|x, y| x - y)(stack)}
 fn mul(stack: &mut Stack) {op_2(&|x, y| x * y)(stack)}
@@ -299,8 +302,21 @@ fn cumsum(stack: &mut Stack) {
     stack.push(List(tmp_stack.into_vec()));
 }
 
-use std::f64::consts;
-use std::f64;
+fn factorial(n: f64) -> f64 {
+    if n < 0. {
+        return f64::NAN;
+    }
+
+    let mut i = 1.;
+    let mut out: f64 = 1.;
+
+    while i <= n && out.is_finite() {
+        out *= i;
+        i += 1.;
+    }
+
+    out
+}
 
 pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
     vec![
@@ -311,13 +327,14 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("*"     , vec!["r", "*"        ], op_2(&|x, y| x * y)),
         ("^"     , vec!["t", "^"        ], op_2(&|x, y| x.powf(y))),
 
-        ("square", vec!["oq"            ], op_1(&|x| x * x)),
-        ("sqrt"  , vec!["or"            ], op_1(&|x| x.sqrt())),
-        ("cbrt"  , vec!["ob"            ], op_1(&|x| x.cbrt())),
-        ("nth_rt", vec!["on"            ], op_2(&|x, y| x.powf(1. / y))),
-        ("negate", vec!["oe"            ], op_1(&|x| -x)),
-        ("invert", vec!["oi"            ], op_1(&|x| x.recip())),
-        ("abs"   , vec!["oab"           ], op_1(&|x| x.abs())),
+        ("square"   , vec!["oq"            ], op_1(&|x| x * x)),
+        ("sqrt"     , vec!["or"            ], op_1(&|x| x.sqrt())),
+        ("cbrt"     , vec!["ob"            ], op_1(&|x| x.cbrt())),
+        ("nth_rt"   , vec!["on"            ], op_2(&|x, y| x.powf(1. / y))),
+        ("negate"   , vec!["oe"            ], op_1(&|x| -x)),
+        ("invert"   , vec!["oi"            ], op_1(&|x| x.recip())),
+        ("factorial", vec!["of"            ], op_1(&factorial)),
+        ("abs"      , vec!["oab"           ], op_1(&|x| x.abs())),
 
         ("pow"   , vec!["iwe"              ], op_1(&|x| x.exp())),
         ("pow2"  , vec!["iws", "iw2", "iww"], op_1(&|x| x.exp2())),
