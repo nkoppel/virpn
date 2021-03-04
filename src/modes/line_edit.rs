@@ -203,10 +203,14 @@ impl Mode for Line_edit_mode {
              self.strs[self.loc].parse::<f64>().is_ok())
         {
             let mut state = HashMap::new();
-            let s = self.strs.remove((self.loc).min(self.strs.len() - 1));
+            let mut s = self.strs.remove((self.loc).min(self.strs.len() - 1));
 
             if self.tokenize_num {
                 self.loc -= 1;
+            }
+
+            if s.contains('e') {
+                s = s.parse::<f64>().unwrap().to_string();
             }
 
             state.insert("loc".to_string(), Uint(s.len() as u64));

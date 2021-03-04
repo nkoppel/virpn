@@ -210,6 +210,16 @@ impl Stack {
     }
 }
 
+fn show_number(n: f64) -> String {
+    if n == 0. && n.is_sign_negative() {
+        "-0".to_string()
+    } else if n.abs() >= 1e12 || n.abs() <= 1e-12 {
+        format!("{:e}", n)
+    } else {
+        format!("{}", n)
+    }
+}
+
 impl Item {
     pub fn to_disp(&self, indent: usize, width: usize, height: usize)
         -> String
@@ -240,7 +250,7 @@ impl Item {
                     format!("[{}]", strs.join(" "))
                 }
             },
-            Num(n) => n.to_string(),
+            Num(n) => show_number(*n),
             Func(s) => format!("({})", s),
         }
     }
@@ -290,7 +300,7 @@ impl fmt::Display for Item {
 
                 write!(f, "[ {} ]", strs.join(" "))
             },
-            Num(n) => write!(f, "{}", n),
+            Num(n) => write!(f, "{}", show_number(*n)),
             Func(s) => write!(f, "( {} )", s),
         }
     }

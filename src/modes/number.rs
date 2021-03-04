@@ -20,7 +20,7 @@ impl Mode for Number_mode {
     }
 
     fn get_operator_regex(&self) -> Regex {
-        Regex::new(r"^-?\d*\.?\d+").unwrap()
+        Regex::new(r"^-?\d*\.?\d+e?\d*").unwrap()
     }
 
     fn get_name(&self) -> String {
@@ -42,9 +42,14 @@ impl Mode for Number_mode {
         -> Vec<Message>
     {
         let mut buffer = Data::unwrap_string_or(state.get("buffer"), String::new());
-        let mut loc = Data::unwrap_usize_or(state.get("loc"), 0);
+        let mut loc = Data::unwrap_usize_or(state.get("loc"), buffer.len());
         let mut msg = Vec::new();
         let mut ret = false;
+
+        if buffer.contains('e') {
+            buffer = buffer.parse::<f64>().unwrap().to_string();
+            loc = buffer.len();
+        }
 
         msg.push(EscBind(vec![KeyBackspace]));
         msg.push(EscBind(vec![KeyLeft]));
