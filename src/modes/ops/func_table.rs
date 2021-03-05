@@ -106,7 +106,7 @@ fn derivative_at(ui: &mut Ui) {
     let x = if let Some(n) = stack.pop_as_num () {n} else {return};
     let f = if let Some(f) = stack.pop_as_func() {f} else {return};
 
-    let d = f64::EPSILON * 1000000000. * x;
+    let d = (f64::EPSILON * 1000000000. * x).max(f64::EPSILON);
     let x2 = x + d;
 
     ui.get_stack().push(Num(x));
