@@ -73,22 +73,26 @@ fn range(stack: &mut Stack) {
 
     let f: Box<dyn Fn(Vec<f64>) -> Item> =
         Box::new(|v| {
-            let n1 = v[0] as i64;
-            let n2 = v[1] as i64;
+            if v.len() >= 2 {
+                let n1 = v[0] as i64;
+                let n2 = v[1] as i64;
 
-            let iter: Box<dyn Iterator<Item = i64>> =
-                if n1 > n2 {
-                    Box::new((n2..n1+1).rev())
-                } else {
-                    Box::new(n1..n2+1)
-                };
+                let iter: Box<dyn Iterator<Item = i64>> =
+                    if n1 > n2 {
+                        Box::new((n2..n1+1).rev())
+                    } else {
+                        Box::new(n1..n2+1)
+                    };
 
-            let mut list = Vec::new();
+                let mut list = Vec::new();
 
-            for i in iter {
-                list.push(Num(i as f64));
+                for i in iter {
+                    list.push(Num(i as f64));
+                    }
+                List(list)
+            } else {
+                List(Vec::new())
             }
-            List(list)
         });
 
     stack.push(new_stack.apply_map(&f))
@@ -106,14 +110,18 @@ fn repeat(stack: &mut Stack) {
 
     let f: Box<dyn Fn(Vec<f64>) -> Item> =
         Box::new(|v| {
-            let n2 = v[0].abs() as u64;
+            if v.len() >= 1 {
+                let n2 = v[0].abs() as u64;
 
-            let mut list = Vec::new();
+                let mut list = Vec::new();
 
-            for _ in 0..n2 {
-                list.push(item.clone());
+                for _ in 0..n2 {
+                    list.push(item.clone());
+                }
+                List(list)
+            } else {
+                List(Vec::new())
             }
-            List(list)
         });
 
     stack.push(new_stack.apply_map(&f))

@@ -14,7 +14,13 @@ pub fn op_1(f: &'static (impl Fn(f64) -> f64 + Sync + Send)) -> Op {
 
         let mut new_stack = Stack::new();
         new_stack.push(stack.pop().unwrap());
-        let g: Box<dyn Fn(Vec<f64>) -> Item> = Box::new(move |s| Num(f(s[0])));
+        let g: Box<dyn Fn(Vec<f64>) -> Item> = Box::new(move |s| {
+            if s.len() >= 1 {
+                Num(f(s[0]))
+            } else {
+                Num(0.)
+            }
+        });
         stack.push(new_stack.apply_map(&g));
     })
 }
@@ -30,8 +36,14 @@ pub fn op_2(f: &'static (impl Fn(f64, f64) -> f64 + Sync + Send)) -> Op {
         new_stack.push(stack.pop().unwrap());
         new_stack.rev();
 
-        let g: Box<dyn Fn(Vec<f64>) -> Item> =
-            Box::new(move |s| Num(f(s[0], s[1])));
+        let g: Box<dyn Fn(Vec<f64>) -> Item> = Box::new(move |s| {
+            if s.len() >= 2 {
+                Num(f(s[0], s[1]))
+            } else {
+                Num(0.)
+            }
+        });
+
 
         stack.push(new_stack.apply_map(&g));
     })

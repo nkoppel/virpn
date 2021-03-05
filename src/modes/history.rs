@@ -49,14 +49,21 @@ impl Mode for History_mode {
 
             self.undos.resize_with(self.undo_id, ||(String::new(), Stack::new()));
             self.undo_id += 1;
-
             self.undos.push((ops.clone(), ui.get_stack().clone()));
 
+            let tokens = ui.tokenize(&ops);
+
             if Some(&ops) != self.lines.last() {
-                self.lines.push(ops.clone());
+                if let Some((mode, _)) = tokens.get(0) {
+                    if tokens.len() > 1 || mode == "line edit" {
+                        self.lines.push(ops.clone());
+                    }
+                }
             }
 
-            self.line_id = self.lines.len() - 1;
+            if self.lines.len() > 0 {
+                self.line_id = self.lines.len() - 1;
+            }
 
             ui.insert_mode(
                 "history".to_string(),
@@ -134,7 +141,7 @@ impl Mode for History_mode {
                 }
             }
             KeyDown => {
-                if self.line_id < self.lines.len() - 1 {
+                if self.lines.len() > 0 && self.line_id < self.lines.len() - 1 {
                     self.line_id += 1;
                     let line = self.lines[self.line_id].clone();
                     let len = line.len();

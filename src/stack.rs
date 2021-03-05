@@ -123,25 +123,28 @@ impl Stack {
     }
 
     pub fn apply_map(self, f: &impl Fn(Vec<f64>) -> Item) -> Item {
-        let mut only_num = true;
+        let mut has_list = false;
 
         for x in self.curr.iter() {
             match x {
-                Num(_) => {},
-                _ => {
-                    only_num = false;
+                List(_) => {
+                    has_list = true;
                     break;
-                }
+                },
+                _ => {},
             }
         }
 
-        if only_num {
-            let input = self.curr.iter().map(|x|
+        if !has_list {
+            let mut input = Vec::new();
+
+            for x in &self.curr {
                 match x {
-                    Num(n) => *n,
-                    _ => panic!()
+                    Num(n) => input.push(*n),
+                    _ => {}
                 }
-            ).collect();
+            }
+
             return f(input);
         }
 
