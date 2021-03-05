@@ -18,7 +18,7 @@ pub fn op_1(f: &'static (impl Fn(f64) -> f64 + Sync + Send)) -> Op {
             if s.len() >= 1 {
                 Num(f(s[0]))
             } else {
-                Num(0.)
+                Num(std::f64::NAN)
             }
         });
         stack.push(new_stack.apply_map(&g));
@@ -40,7 +40,7 @@ pub fn op_2(f: &'static (impl Fn(f64, f64) -> f64 + Sync + Send)) -> Op {
             if s.len() >= 2 {
                 Num(f(s[0], s[1]))
             } else {
-                Num(0.)
+                Num(std::f64::NAN)
             }
         });
 
