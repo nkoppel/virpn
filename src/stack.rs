@@ -126,12 +126,9 @@ impl Stack {
         let mut has_list = false;
 
         for x in self.curr.iter() {
-            match x {
-                List(_) => {
-                    has_list = true;
-                    break;
-                },
-                _ => {},
+            if let List(_) = x {
+                has_list = true;
+                break;
             }
         }
 
@@ -139,9 +136,8 @@ impl Stack {
             let mut input = Vec::new();
 
             for x in &self.curr {
-                match x {
-                    Num(n) => input.push(*n),
-                    _ => {}
+                if let Num(n) = x {
+                    input.push(*n);
                 }
             }
 

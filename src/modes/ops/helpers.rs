@@ -15,7 +15,7 @@ pub fn op_1(f: &'static (impl Fn(f64) -> f64 + Sync + Send)) -> Op {
         let mut new_stack = Stack::new();
         new_stack.push(stack.pop().unwrap());
         let g: Box<dyn Fn(Vec<f64>) -> Item> = Box::new(move |s| {
-            if s.len() >= 1 {
+            if !s.is_empty() {
                 Num(f(s[0]))
             } else {
                 Num(std::f64::NAN)

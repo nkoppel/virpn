@@ -61,7 +61,7 @@ impl Mode for History_mode {
                 }
             }
 
-            if self.lines.len() > 0 {
+            if !self.lines.is_empty() {
                 self.line_id = self.lines.len() - 1;
             }
 
@@ -141,7 +141,7 @@ impl Mode for History_mode {
                 }
             }
             KeyDown => {
-                if self.lines.len() > 0 && self.line_id < self.lines.len() - 1 {
+                if self.lines.is_empty() && self.line_id < self.lines.len() - 1 {
                     self.line_id += 1;
                     let line = self.lines[self.line_id].clone();
                     let len = line.len();
@@ -149,14 +149,11 @@ impl Mode for History_mode {
                 }
             }
             Character(' ') | Character('\n') => {
-                self.op =
-                    if let Some(r) = state.remove("return") {
-                        r.into_string()
-                    } else if let Some(l) = self.lines.get(self.line_id) {
-                        l.clone()
-                    } else {
-                        String::new()
-                    };
+                if let Some(r) = state.remove("return") {
+                    self.op = r.into_string();
+                } else if let Some(l) = self.lines.get(self.line_id) {
+                    self.op = l.clone();
+                }
 
                 msg.push(Return);
             }
@@ -219,12 +216,12 @@ impl Mode for History_mode {
     }
 
     fn ret(&mut self, _: &mut State) -> String {
-        let op = mem::replace(&mut self.op, String::new());
+        // let op = mem::replace(&mut self.op, String::new());
 
-        if op == "undo" || op == "redo" {
-            op
+        if self.op == "undo" || self.op == "redo" {
+            self.op.clone()
         } else {
-            format!("history_add {}", op)
+            format!("history_add {}", self.op)
         }
     }
 }

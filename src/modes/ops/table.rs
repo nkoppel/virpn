@@ -110,7 +110,7 @@ fn repeat(stack: &mut Stack) {
 
     let f: Box<dyn Fn(Vec<f64>) -> Item> =
         Box::new(|v| {
-            if v.len() >= 1 {
+            if !v.is_empty() {
                 let n2 = v[0].abs() as u64;
 
                 let mut list = Vec::new();
