@@ -69,7 +69,7 @@ fn range(stack: &mut Stack) {
     let mut new_stack = Stack::new();
     new_stack.push(stack.pop().unwrap());
     new_stack.push(stack.pop().unwrap());
-    new_stack.rev();
+    new_stack.reverse();
 
     let f: Box<dyn Fn(Vec<f64>) -> Item> =
         Box::new(|v| {
@@ -106,7 +106,7 @@ fn repeat(stack: &mut Stack) {
     let mut new_stack = Stack::new();
     new_stack.push(stack.pop().unwrap());
     let item = stack.pop().unwrap();
-    new_stack.rev();
+    new_stack.reverse();
 
     let f: Box<dyn Fn(Vec<f64>) -> Item> =
         Box::new(|v| {
@@ -326,6 +326,26 @@ fn factorial(n: f64) -> f64 {
     out
 }
 
+fn adjacent_difference(stack: &mut Stack) {
+    let mut vec = if let Some(l) = stack.pop_as_list() {l} else {return};
+    let mut tmp_stack = Stack::new();
+
+    if let Some(i) = vec.pop() {
+        tmp_stack.push(i);
+    }
+
+    for x in vec.into_iter().rev() {
+        tmp_stack.push(x.clone());
+        sub(&mut tmp_stack);
+        tmp_stack.push(x);
+    }
+
+    tmp_stack.pop();
+    tmp_stack.reverse();
+
+    stack.push(List(tmp_stack.into_vec()))
+}
+
 pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
     vec![
         ("+"     , vec!["q", "+"        ], op_2(&|x, y| x + y)),
@@ -388,7 +408,7 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("rotate", vec!["iso", "oo"     ], basic(&rotate)),
         ("dup"   , vec!["isd", "od"     ], basic(&duplicate)),
         ("pop"   , vec!["isp", "op"     ], basic(&|st| {st.pop();})),
-        ("rev"   , vec!["isv", "ov"     ], basic(&|st| st.rev())),
+        ("rev"   , vec!["isv", "ov"     ], basic(&|st| st.reverse())),
 
         ("round"       , vec!["ior"      ], op_1(&|x| x.round())),
         ("floor"       , vec!["iof"      ], op_1(&|x| x.floor())),
@@ -399,13 +419,14 @@ pub fn gen_ops() -> Vec<(String, Vec<Vec<Input>>, Op)> {
         ("new_list" , vec!["iln"], basic(&|st| {st.push(List(Vec::new())); st.down()})),
         ("sum_list" , vec!["ilu"], list_fold_op(&|x, y| x + y, 0.)),
         ("msum_list", vec!["ilm"], list_fold_op(&|x, y| x * y, 1.)),
-        ("rev_list" , vec!["ilv"], basic(&|st| {st.down(); st.rev(); st.up()})),
+        ("rev_list" , vec!["ilv"], basic(&|st| {st.down(); st.reverse(); st.up()})),
 
-        ("range"  , vec!["ila"], basic(&range)),
-        ("repeat" , vec!["ilr"], basic(&repeat)),
-        ("len"    , vec!["ill"], basic(&list_len)),
-        ("flatten", vec!["ilf"], basic(&flatten)),
-        ("cumsum" , vec!["ilc"], basic(&cumsum)),
+        ("range"    , vec!["ila"], basic(&range)),
+        ("repeat"   , vec!["ilr"], basic(&repeat)),
+        ("len"      , vec!["ill"], basic(&list_len)),
+        ("flatten"  , vec!["ilf"], basic(&flatten)),
+        ("cumsum"   , vec!["ilc"], basic(&cumsum)),
+        ("adj_diff" , vec!["ild"], basic(&adjacent_difference)),
         ("transpose", vec!["ilt"], basic(&transpose)),
 
         ("synth_sub", vec!["ipp", "ilp"], basic(&synth_sub)),

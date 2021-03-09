@@ -34,7 +34,7 @@ pub fn op_2(f: &'static (impl Fn(f64, f64) -> f64 + Sync + Send)) -> Op {
         let mut new_stack = Stack::new();
         new_stack.push(stack.pop().unwrap());
         new_stack.push(stack.pop().unwrap());
-        new_stack.rev();
+        new_stack.reverse();
 
         let g: Box<dyn Fn(Vec<f64>) -> Item> = Box::new(move |s| {
             if s.len() >= 2 {

@@ -126,6 +126,7 @@ Note: The locations of the letters for addition, subtraction, and division are b
     'ob'           = cube root
     'on'           = nth root
     'oe'           = negate
+    'of'           = integer factorial
 
     'oge'          = log base e
     'og1' or 'oga' = log base 10
@@ -173,9 +174,10 @@ Note: The locations of the letters for addition, subtraction, and division are b
     'ilu'       = sum all numbers in the bottom list
     'ilm'       = multiply all numbers in the bottom list together
     'ilc'       = add each item in the bottom list to all items before it
+    'ild'       = find the differences between adjacent elements in the bottom list
     'ilv'       = reverse the items in the bottom list
     'ill'       = get the length of the bottom list
-    'ilt'       = mirror a 2d list diagonally
+    'ilt'       = mirror the bottom 2d list diagonally
 
 
 ### Polynomials

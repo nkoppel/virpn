@@ -101,9 +101,8 @@ impl Stack {
         self.above.push(tmp);
     }
 
-    pub fn rev(&mut self) {
-        let tmp = std::mem::replace(&mut self.curr, Vec::new());
-        self.curr = tmp.into_iter().rev().collect();
+    pub fn reverse(&mut self) {
+        self.curr.reverse();
     }
 
     pub fn last(&self) -> Option<&Item> {
