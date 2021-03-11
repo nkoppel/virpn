@@ -62,7 +62,7 @@ impl Mode for History_mode {
             }
 
             if !self.lines.is_empty() {
-                self.line_id = self.lines.len() - 1;
+                self.line_id = self.lines.len();
             }
 
             ui.insert_mode(
@@ -139,7 +139,7 @@ impl Mode for History_mode {
                 }
             }
             KeyDown => {
-                if self.lines.is_empty() && self.line_id < self.lines.len() - 1 {
+                if !self.lines.is_empty() && self.line_id < self.lines.len() - 1 {
                     self.line_id += 1;
                     let line = self.lines[self.line_id].clone();
                     let len = line.len();
@@ -178,7 +178,7 @@ impl Mode for History_mode {
                 }
             }
             Character('\u{1b}') | KeyDC => {
-                self.line_id = self.lines.len().saturating_sub(1);
+                self.line_id = self.lines.len();
 
                 self.op.clear();
                 state.remove("return");
