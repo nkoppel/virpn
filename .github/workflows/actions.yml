@@ -43,11 +43,11 @@ jobs:
       run: sh build_wasm.sh
 
     - name: Push build in www directory to nkoppel.github.io
-      uses: cpina/github-action-push-to-another-repository@master
+      uses: nkoppel/push-files-to-another-repository@master
       env:
         API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
       with:
-        source-directory: 'www'
+        source-files: 'www/virpn'
         destination-github-username: 'nkoppel'
         destination-repository-name: 'nkoppel.github.io'
         user-email: 'nathankoppel0@gmail.com'
