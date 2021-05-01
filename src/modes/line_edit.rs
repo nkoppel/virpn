@@ -49,17 +49,17 @@ fn tokenize_rec(ui: &mut Ui, ops: &str) -> Vec<String> {
 
     for (_, op) in ui.tokenize(ops) {
         if &op[0..1] == "(" {
-            let loc = find_matching_paren(&op).unwrap();
+            let loc = find_matching_paren(&op).unwrap_or(op.len());
 
             out.push("(".to_string());
-            out.append(&mut tokenize_rec(ui, &op[2..loc - 1]));
+            out.append(&mut tokenize_rec(ui, &op[1..loc - 1].trim()));
             out.push(")".to_string());
             out.append(&mut tokenize_rec(ui, &op[(loc + 2).min(op.len())..]));
         } else if &op[0..1] == "[" {
-            let loc = find_matching_paren(&op).unwrap();
+            let loc = find_matching_paren(&op).unwrap_or(op.len());
 
             out.push("[".to_string());
-            out.append(&mut tokenize_rec(ui, &op[2..loc - 1]));
+            out.append(&mut tokenize_rec(ui, &op[1..loc - 1].trim()));
             out.push("]".to_string());
             out.append(&mut tokenize_rec(ui, &op[(loc + 2).min(op.len())..]));
         } else {
